@@ -1,5 +1,6 @@
 
 import logging
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +15,14 @@ logging.basicConfig(  #configure logging
 )
 log = logging.getLogger("api.main")
 
+# On Vercel the API is public under /api (see the root vercel.json rewrite).
+# root_path makes /docs and /openapi.json resolve under that prefix; Starlette
+# still matches requests whether or not the router strips the prefix.
+# Override with API_ROOT_PATH ("" to serve from the domain root).
+ROOT_PATH = os.getenv("API_ROOT_PATH", "/api" if os.getenv("VERCEL") else "")
+
 app = FastAPI(   #create FastAPI app
+    root_path=ROOT_PATH,
     title="RaceIntel360 API",  #api title
     version="0.1.0",
     description=(

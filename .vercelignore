@@ -1,0 +1,5 @@
+# Not needed at runtime on Vercel: the site's data is prebuilt in
+# frontend/public/data and the pipeline runs locally, not on Vercel.
+backend/cache/
+backend/data/
+docs/screenshots/

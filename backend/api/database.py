@@ -9,7 +9,10 @@ from sqlalchemy.orm import declarative_base
 
 log = logging.getLogger(__name__)
 
-DEFAULT_SQLITE_URL = "sqlite+aiosqlite:///./raceintel.db"
+# Vercel functions can only write to /tmp, so the default SQLite file lives there.
+DEFAULT_SQLITE_URL = (
+    "sqlite+aiosqlite:////tmp/raceintel.db" if os.getenv("VERCEL") else "sqlite+aiosqlite:///./raceintel.db"
+)
 DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_SQLITE_URL)
 
 Base = declarative_base()
