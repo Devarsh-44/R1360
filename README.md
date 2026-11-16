@@ -8,6 +8,8 @@
 
 Race traces, tyre strategies, a fitted pace model for every race, and a strategy lab where you can re-run a Grand Prix on different tyres. All of it is built from 96,223 real timing laps (2019–2023).
 
+**[Open the live site → ri360.vercel.app](https://ri360.vercel.app)**
+
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FDevarsh-44%2FR1360)
 
 </div>
