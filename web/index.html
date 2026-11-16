@@ -12,11 +12,11 @@
     <meta property="og:description" content="Five seasons of F1 timing data, a fitted pace model and a strategy lab." />
     <meta name="theme-color" content="#d7261e" />
     <link rel="icon" type="image/svg+xml" href="./ri360-mark.svg" />
-    <link rel="preload" href="./fonts/barlow-condensed-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin />
     <script>
       try {
         var t = localStorage.getItem("ri360-theme");
-        if (t === "paper" || t === "pit") document.documentElement.dataset.theme = t;
+        if (t !== "paper" && t !== "pit") t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "pit" : "paper";
+        document.documentElement.dataset.theme = t;
       } catch (e) {}
     </script>
   </head>

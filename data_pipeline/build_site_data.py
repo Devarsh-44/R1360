@@ -35,6 +35,8 @@ KEY = ["race_id", "driver_code", "lap_number"]
 # FastF1 track status codes
 NEUTRAL = {"4": "SC", "5": "RED", "6": "VSC", "7": "VSC"}
 PIT_LOSS_DEFAULT = 22.0  # the constant the API's simulator uses
+# the timing feed names some venues two ways across seasons
+LOCATION_ALIAS = {"Marina Bay": "Singapore", "Monte Carlo": "Monaco", "Spa-Francorchamps": "Spa", "Yas Island": "Yas Marina"}
 
 
 def norm(s: str) -> str:
@@ -83,7 +85,7 @@ def read_cache(p: Path) -> dict:
     info = load_pkl(p / "session_info.ff1pkl", {})
     meeting = info.get("Meeting", {})
     res = {
-        "location": meeting.get("Location"),
+        "location": LOCATION_ALIAS.get(meeting.get("Location"), meeting.get("Location")),
         "country": (meeting.get("Country") or {}).get("Name"),
         "date": info["StartDate"].date().isoformat() if info.get("StartDate") else None,
         "drivers": {},
