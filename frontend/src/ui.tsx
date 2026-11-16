@@ -4,7 +4,7 @@ import { COMPOUND_NAME } from "./lib/data";
 import { signed } from "./lib/format";
 import { Wordmark } from "./Wordmark";
 
-export const REPO = "https://github.com/Devarsh-44/ri360";
+export const REPO = "https://github.com/Devarsh-44/R1360";
 export const REPO_BACKEND = `${REPO}/tree/main/backend`;
 export const REPO_FRONTEND = `${REPO}/tree/main/frontend`;
 

@@ -3,7 +3,7 @@
 ## Website (Vercel)
 
 1. Sign in at vercel.com with GitHub and choose **Add New → Project**.
-2. Import the `ri360` repository.
+2. Import the `R1360` repository.
 3. Leave **Root Directory** empty and **Framework Preset** as "Other". The settings come from `vercel.json`:
    - Install: `npm ci --prefix frontend`
    - Build: `npm run build --prefix frontend`

@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  website:
+    name: Website builds
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npm audit --audit-level=high
+
+  api:
+    name: API starts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r requirements.txt httpx
+      - name: Smoke-test the API
+        run: |
+          python - <<'PY'
+          from fastapi.testclient import TestClient
+          from api.main import app
+          client = TestClient(app)
+          for path in ("/", "/health", "/docs"):
+              r = client.get(path)
+              assert r.status_code == 200, (path, r.status_code)
+          print("API OK:", len(app.routes), "routes")
+          PY

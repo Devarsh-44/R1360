@@ -3,9 +3,9 @@
 ## Quick Steps
 
 ### 1. Open Terminal/PowerShell
-Navigate to the project directory:
+Go to the backend folder of your clone:
 ```cmd
-cd c:\Users\dbkgn\raceintel360
+cd R1360\backend
 ```
 
 ### 2. Activate Virtual Environment
@@ -74,8 +74,7 @@ If you get import errors:
 1. Make sure virtual environment is activated
 2. Reinstall dependencies:
    ```cmd
-   pip install -r api/requirements.txt
-   pip install -r data_pipeline/requirements.txt
+   pip install -r requirements.txt
    ```
 
 ## What Each Command Does
