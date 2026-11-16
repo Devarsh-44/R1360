@@ -1,6 +1,6 @@
 import { scaleLinear } from "d3-scale";
 import { line } from "d3-shape";
-import { useMemo, useState, type ReactNode } from "react";
+import { memo, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { useWidth } from "./useWidth";
 
 export type SeriesKind = "focus" | "compare" | "third" | "muted";
@@ -36,13 +36,17 @@ interface Props {
   directLabels?: boolean;
   tipTitle?: (x: number) => string;
   yTicks?: number;
+  /** explicit y tick values (overrides yTicks) */
+  yTickValues?: number[];
 }
 
 const M = { top: 16, right: 56, bottom: 34, left: 56 };
 
-export function LineChart({ series, height = 300, yFormat, xLabel, yLabel, yDomain, invertY, zeroLine, bands = [], best, ariaLabel, directLabels = true, tipTitle, yTicks = 5 }: Props) {
+export const LineChart = memo(function LineChart({ series, height = 300, yFormat, xLabel, yLabel, yDomain, invertY, zeroLine, bands = [], best, ariaLabel, directLabels = true, tipTitle, yTicks = 5, yTickValues }: Props) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const [hoverX, setHoverX] = useState<number | null>(null);
+  const raf = useRef(0);
+  const clipId = useId().replace(/:/g, "");
   const narrow = width < 520;
   const m = { ...M, right: directLabels ? (narrow ? 40 : M.right) : 12, left: narrow ? 46 : M.left };
 
@@ -54,7 +58,7 @@ export function LineChart({ series, height = 300, yFormat, xLabel, yLabel, yDoma
       xsSet.add(p.x);
       xlo = Math.min(xlo, p.x);
       xhi = Math.max(xhi, p.x);
-      if (p.y != null) {
+      if (p.y != null && Number.isFinite(p.y)) {
         ylo = Math.min(ylo, p.y);
         yhi = Math.max(yhi, p.y);
       }
@@ -69,13 +73,15 @@ export function LineChart({ series, height = 300, yFormat, xLabel, yLabel, yDoma
     return { x: xScale, y: yScale, xs: [...xsSet].sort((a, b) => a - b) };
   }, [series, width, height, yDomain, invertY, m.left, m.right, m.top, m.bottom, yTicks]);
 
-  const path = line<{ x: number; y: number | null }>()
-    .defined((p) => p.y != null && isFinite(p.y))
-    .x((p) => x(p.x))
-    .y((p) => y(p.y as number));
-
-  // draw muted first so highlighted series sit on top
-  const order = [...series].sort((a, b) => rank(a.kind) - rank(b.kind));
+  // paths only depend on data and size, never on the hover position
+  const paths = useMemo(() => {
+    const path = line<{ x: number; y: number | null }>()
+      .defined((p) => p.y != null && Number.isFinite(p.y))
+      .x((p) => x(p.x))
+      .y((p) => y(p.y as number));
+    // draw muted first so highlighted series sit on top
+    return [...series].sort((a, b) => rank(a.kind) - rank(b.kind)).map((s) => ({ s, d: path(s.points) ?? "" }));
+  }, [series, x, y]);
   const highlighted = series.filter((s) => s.kind !== "muted");
 
   const onMove = (clientX: number, rect: DOMRect) => {
@@ -83,17 +89,18 @@ export function LineChart({ series, height = 300, yFormat, xLabel, yLabel, yDoma
     const xv = x.invert(px);
     let nearest = xs[0];
     for (const v of xs) if (Math.abs(v - xv) < Math.abs(nearest - xv)) nearest = v;
-    setHoverX(nearest);
+    cancelAnimationFrame(raf.current);
+    raf.current = requestAnimationFrame(() => setHoverX(nearest));
   };
 
-  const hoverVals = hoverX == null ? [] : highlighted.map((s) => ({ s, p: s.points.find((p) => p.x === hoverX) })).filter((v) => v.p && v.p.y != null);
+  const hoverVals = hoverX == null ? [] : highlighted.map((s) => ({ s, p: s.points.find((p) => p.x === hoverX) })).filter((v) => v.p && v.p.y != null && Number.isFinite(v.p.y));
 
   // end labels, nudged apart so they never collide
   const ends = directLabels && highlighted.length <= 4
     ? spread(
         highlighted
           .map((s) => {
-            const last = [...s.points].reverse().find((p) => p.y != null);
+            const last = [...s.points].reverse().find((p) => p.y != null && Number.isFinite(p.y));
             return last ? { s, x: x(last.x), y: y(last.y as number) } : null;
           })
           .filter((e): e is { s: Series; x: number; y: number } => e != null),
@@ -112,11 +119,16 @@ export function LineChart({ series, height = 300, yFormat, xLabel, yLabel, yDoma
         role="img"
         aria-label={ariaLabel}
         onMouseMove={(e) => onMove(e.clientX, e.currentTarget.getBoundingClientRect())}
-        onMouseLeave={() => setHoverX(null)}
+        onMouseLeave={() => { cancelAnimationFrame(raf.current); setHoverX(null); }}
         onTouchStart={(e) => onMove(e.touches[0].clientX, e.currentTarget.getBoundingClientRect())}
         onTouchMove={(e) => onMove(e.touches[0].clientX, e.currentTarget.getBoundingClientRect())}
-        onTouchEnd={() => setHoverX(null)}
+        onTouchEnd={() => { cancelAnimationFrame(raf.current); setHoverX(null); }}
       >
+        <defs>
+          <clipPath id={clipId}>
+            <rect x={m.left} y={m.top - 6} width={Math.max(0, width - m.left - m.right)} height={height - m.top - m.bottom + 12} />
+          </clipPath>
+        </defs>
         <rect className="plot-bg" x={m.left} y={m.top} width={Math.max(0, width - m.left - m.right)} height={height - m.top - m.bottom} rx={4} />
         {bands.map((b, i) => (
           <g key={i}>
@@ -125,7 +137,7 @@ export function LineChart({ series, height = 300, yFormat, xLabel, yLabel, yDoma
           </g>
         ))}
         <g className="axis">
-          {y.ticks(yTicks).map((t) => (
+          {(yTickValues ?? y.ticks(yTicks)).map((t) => (
             <g key={t}>
               <line className="grid-line" x1={m.left} x2={width - m.right} y1={y(t)} y2={y(t)} />
               <text x={m.left - 8} y={y(t)} dy="0.32em" textAnchor="end">{yFormat(t)}</text>
@@ -138,11 +150,13 @@ export function LineChart({ series, height = 300, yFormat, xLabel, yLabel, yDoma
           {yLabel && <text className="axis-title" x={m.left} y={10}>{yLabel}</text>}
         </g>
         {zeroLine && y.domain()[0] < 0 && y.domain()[1] > 0 && <line className="zero-line" x1={m.left} x2={width - m.right} y1={y(0)} y2={y(0)} />}
-        {order.map((s) => (
-          <path key={s.id} className={`s-${s.kind}`} d={path(s.points) ?? ""}>
-            <title>{s.label}</title>
-          </path>
-        ))}
+        <g clipPath={`url(#${clipId})`}>
+          {paths.map(({ s, d }) => (
+            <path key={s.id} className={`s-${s.kind}`} d={d}>
+              <title>{s.label}</title>
+            </path>
+          ))}
+        </g>
         {highlighted.flatMap((s) =>
           (s.marks ?? []).map((mx) => {
             const p = s.points.find((q) => q.x === mx);
@@ -174,7 +188,7 @@ export function LineChart({ series, height = 300, yFormat, xLabel, yLabel, yDoma
       )}
     </div>
   );
-}
+});
 
 export function Legend({ items }: { items: { kind: SeriesKind | "best" | "sc"; label: ReactNode }[] }) {
   return (

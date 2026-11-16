@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Legend, LineChart, type Series } from "../charts/LineChart";
 import type { Index, Race, RaceDriver } from "../lib/data";
 import { COMPOUND_NAME, shortName, useRace } from "../lib/data";
@@ -59,6 +59,9 @@ export function Lab({ index, raceId, driver }: { index: Index; raceId: number | 
   );
 }
 
+// gaps to the reference plan: whole seconds when ticks are whole, else one decimal
+const gapFormat = (v: number) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(Number.isInteger(Math.round(v * 1000) / 1000) ? 0 : 1)}s`;
+
 const PLAN_KIND = ["focus", "compare", "third", "muted"] as const;
 
 function LabView({ race, driverCode }: { race: Race; driverCode: string | null }) {
@@ -68,9 +71,11 @@ function LabView({ race, driverCode }: { race: Race; driverCode: string | null }
   const comps = modelCompounds(m);
   const [pitLoss, setPitLoss] = useState(race.pitLoss);
 
-  const actual: PlanStint[] | null = d.laps === race.laps && d.stints.every((s) => comps.includes(s.c)) ? d.stints.map((s) => ({ c: s.c, laps: s.to - s.from + 1 })) : null;
-  const best1 = useMemo(() => optimise(m, race.laps, 1, pitLoss), [m, race.laps, pitLoss]);
-  const best2 = useMemo(() => optimise(m, race.laps, 2, pitLoss), [m, race.laps, pitLoss]);
+  const actual: PlanStint[] | null = d.laps === race.laps && d.stints.every((s) => comps.includes(s.c)) ? normalisePlan(d.stints.map((s, i) => ({ c: s.c, laps: (i < d.stints.length - 1 ? d.stints[i + 1].from - 1 : race.laps) - (i === 0 ? 0 : s.from - 1) })), race.laps) : null;
+  // the slider label moves at once; the search and charts follow without blocking the drag
+  const loss = useDeferredValue(pitLoss);
+  const best1 = useMemo(() => optimise(m, race.laps, 1, loss), [m, race.laps, loss]);
+  const best2 = useMemo(() => optimise(m, race.laps, 2, loss), [m, race.laps, loss]);
   const [mine, setMine] = useState<PlanStint[]>(() => normalisePlan(actual ?? best1 ?? [{ c: comps[0], laps: race.laps }], race.laps));
   useEffect(() => setMine(normalisePlan(actual ?? best1 ?? [{ c: comps[0], laps: race.laps }], race.laps)), [d.code]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -81,10 +86,15 @@ function LabView({ race, driverCode }: { race: Race; driverCode: string | null }
     best2 && { id: "b2", name: "Best two-stop", plan: best2 },
   ].filter(Boolean) as { id: string; name: string; plan: PlanStint[] }[];
 
-  const results = plans.map((p) => ({ ...p, sim: simulate(m, base, race.laps, p.plan, pitLoss) }));
+  const results = plans.map((p) => ({ ...p, sim: simulate(m, base, race.laps, p.plan, loss) }));
   const fastest = Math.min(...results.map((r) => r.sim.total));
   const ref = results.find((r) => r.sim.total === fastest)!;
   const kinds = new Map(results.map((r, i) => [r.id, PLAN_KIND[i]]));
+  // plans that are stint-for-stint the same as an earlier one draw exactly on top of it; say so
+  const key = (p: PlanStint[]) => planLabel(p);
+  const sameAs = new Map(results.map((r, i) => [r.id, results.slice(0, i).find((q) => key(q.plan) === key(r.plan))?.name ?? null]));
+  // lap-time chart: your plan against the best alternative that actually differs from it
+  const lapPair = [results[0], results.slice(1).filter((r) => !sameAs.get(r.id) && key(r.plan) !== key(mine)).sort((a, b) => a.sim.total - b.sim.total)[0]].filter(Boolean);
 
   const deltaSeries: Series[] = results.map((r) => ({
     id: r.id,
@@ -92,7 +102,7 @@ function LabView({ race, driverCode }: { race: Race; driverCode: string | null }
     kind: kinds.get(r.id)!,
     points: r.sim.cumulative.map((c, i) => ({ x: i + 1, y: Number((c - ref.sim.cumulative[i]).toFixed(2)) })),
   }));
-  const lapSeries: Series[] = results.slice(0, 2).map((r) => ({
+  const lapSeries: Series[] = lapPair.map((r) => ({
     id: r.id,
     label: r.name,
     kind: kinds.get(r.id)!,
@@ -113,7 +123,7 @@ function LabView({ race, driverCode }: { race: Race; driverCode: string | null }
         <div className="plan">
           {mine.map((s, i) => (
             <div key={i} className="plan-stint">
-              <span className="data-label" style={{ width: 60, whiteSpace: "nowrap" }}>Stint {i + 1}</span>
+              <span className="data-label" style={{ whiteSpace: "nowrap" }}>Stint {i + 1}</span>
               <div className="ri-seg" role="group" aria-label={`Stint ${i + 1} compound`}>
                 {comps.map((c) => (
                   <button key={c} aria-pressed={s.c === c} onClick={() => update(i, { c })} title={COMPOUND_NAME[c]}>
@@ -130,12 +140,14 @@ function LabView({ race, driverCode }: { race: Race; driverCode: string | null }
                 aria-label={`Stint ${i + 1} laps`}
                 onChange={(e) => update(i, { laps: Number(e.target.value) })}
               />
-              <span className="caption">laps</span>
+              <span className="caption laps-unit">laps</span>
+              <span className="x-slot">
               {mine.length > 1 && (
                 <button className="ri-btn ri-btn--ghost ri-btn--sm" aria-label={`Remove stint ${i + 1}`} onClick={() => setMine((p) => normalisePlan(p.filter((_, j) => j !== i), race.laps))}>
                   ✕
                 </button>
               )}
+              </span>
             </div>
           ))}
           <div className="row">
@@ -189,7 +201,10 @@ function LabView({ race, driverCode }: { race: Race; driverCode: string | null }
               <div className="result-row" key={r.id}>
                 <i className={`sw k-${kinds.get(r.id)}`} />
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 600 }}>{r.name}</div>
+                  <div style={{ fontWeight: 600 }}>
+                    {r.name}
+                    {sameAs.get(r.id) && <span className="caption" style={{ fontWeight: 400, marginLeft: 8 }}>same as {sameAs.get(r.id)!.toLowerCase()}</span>}
+                  </div>
                   <div className="row" style={{ gap: 6, marginTop: 4 }}>
                     <div className="stintbar" style={{ width: 160, minWidth: 0 }}>
                       {r.plan.map((s, i) => (
@@ -212,12 +227,12 @@ function LabView({ race, driverCode }: { race: Race; driverCode: string | null }
               <div className="title">Gap to the fastest plan, lap by lap</div>
               <div className="caption">Below zero means behind {ref.name.toLowerCase()} at that point of the race. Steps are pit stops.</div>
             </div>
-            <Legend items={results.map((r) => ({ kind: kinds.get(r.id)!, label: r.name }))} />
+            <Legend items={results.map((r) => ({ kind: kinds.get(r.id)!, label: sameAs.get(r.id) ? `${r.name} (under ${sameAs.get(r.id)!.toLowerCase()})` : r.name }))} />
           </div>
           <LineChart
             height={300}
             series={deltaSeries.map((s) => ({ ...s, points: s.points.map((p) => ({ x: p.x, y: p.y == null ? null : -p.y })) }))}
-            yFormat={(v) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(0)}s`}
+            yFormat={gapFormat}
             zeroLine
             directLabels={false}
             xLabel="Lap"
@@ -229,11 +244,13 @@ function LabView({ race, driverCode }: { race: Race; driverCode: string | null }
           <div className="card-head">
             <div>
               <div className="title">Predicted lap times</div>
-              <div className="caption">Fuel burn makes the car faster each lap; tyre age makes it slower. Pit laps are left out.</div>
+              <div className="caption">
+                {lapPair.length > 1 ? `Your plan against ${lapPair[1].name.toLowerCase()}. ` : ""}Fuel burn makes the car faster each lap; tyre age makes it slower. Pit laps are left out.
+              </div>
             </div>
-            <Legend items={results.slice(0, 2).map((r) => ({ kind: kinds.get(r.id)!, label: r.name }))} />
+            <Legend items={lapPair.map((r) => ({ kind: kinds.get(r.id)!, label: r.name }))} />
           </div>
-          <LineChart height={240} series={lapSeries} yFormat={(v) => lapTime(v, 2)} directLabels={false} xLabel="Lap" ariaLabel="Predicted lap times for the first two plans" />
+          <LineChart height={240} series={lapSeries} yFormat={(v) => lapTime(v, 2)} directLabels={false} xLabel="Lap" ariaLabel="Predicted lap times for your plan and the closest alternative" />
         </div>
 
         <div className="ri-card">

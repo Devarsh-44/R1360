@@ -244,7 +244,7 @@ function Positions({ race, A, B, bands }: { race: RaceT; A: RaceDriver; B: RaceD
         </div>
         <Legend items={[{ kind: "focus", label: A.code }, { kind: "compare", label: B.code }]} />
       </div>
-      <LineChart height={280} series={series} bands={bands} invertY yDomain={[1, race.drivers.length]} yFormat={(v) => `P${v}`} xLabel="Lap" ariaLabel={`Positions of ${A.code} and ${B.code} by lap`} yTicks={5} />
+      <LineChart height={280} series={series} bands={bands} invertY yDomain={[1, race.drivers.length]} yFormat={(v) => `P${v}`} xLabel="Lap" ariaLabel={`Positions of ${A.code} and ${B.code} by lap`} yTickValues={[1, ...[5, 10, 15, 20].filter((v) => v <= race.drivers.length)]} />
     </div>
   );
 }
