@@ -1,9 +1,16 @@
 """Telemetry API routes for FastF1 data."""
 
+import os
+
 import fastf1
 from fastapi import APIRouter, HTTPException, Query
 
 router = APIRouter()
+
+# FastF1 caches downloads on disk; on Vercel only /tmp is writable.
+_CACHE_DIR = os.getenv("FASTF1_CACHE", "/tmp/fastf1_cache" if os.getenv("VERCEL") else "./cache")
+os.makedirs(_CACHE_DIR, exist_ok=True)
+fastf1.Cache.enable_cache(_CACHE_DIR)
 
 
 @router.get("/telemetry/fastest-lap")
