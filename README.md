@@ -2,6 +2,10 @@
 
 A comprehensive F1 racing data analytics platform built with FastAPI and FastF1. Collect, store, and analyze Formula 1 race data with ease.
 
+## Website
+
+`web/` holds the RI360 site: race traces, tyre strategies, per-race pace models and an interactive strategy lab, built from the data in this repository. See [web/README.md](web/README.md) to run or deploy it, and `data_pipeline/build_site_data.py` for how its data bundle is made.
+
 ## Features
 
 - **Data Collection**: Automated F1 data fetching using FastF1 library

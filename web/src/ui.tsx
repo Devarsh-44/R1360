@@ -18,7 +18,12 @@ const NAV: [string, string][] = [
 type Theme = "paper" | "pit";
 
 function useTheme(): [Theme, () => void] {
-  const [theme, setTheme] = useState<Theme>(() => (document.documentElement.dataset.theme as Theme) || "paper");
+  const [theme, setTheme] = useState<Theme>(() => {
+    const t = document.documentElement.dataset.theme;
+    if (t === "pit" || t === "dark") return "pit";
+    if (t === "paper" || t === "light") return "paper";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "pit" : "paper";
+  });
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     try {

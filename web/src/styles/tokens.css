@@ -34,7 +34,8 @@
 }
 
 :root,
-[data-theme="paper"] {
+[data-theme="paper"],
+[data-theme="light"] {
   color-scheme: light;
   --surface-page: #f7f3ea;
   --surface-card: #fffdf8;
@@ -57,7 +58,33 @@
   --shadow-pop: 0 8px 24px rgba(22, 19, 15, 0.14);
 }
 
-[data-theme="pit"] {
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --surface-page: #12100d;
+    --surface-card: #1c1915;
+    --surface-sunken: #0b0a08;
+    --surface-inverse: #f3ede1;
+    --line-subtle: #2c2721;
+    --line-strong: #6b6253;
+    --text-primary: #f3ede1;
+    --text-muted: #a89f8e;
+    --text-inverse: #12100d;
+    --race-red: #ff5a4a;
+    --race-red-strong: #ff7a6d;
+    --on-race-red: #12100d;
+    --race-red-tint: #3a1814;
+    --petrol: #6fb2c6;
+    --petrol-tint: #16303a;
+    --podium: #e2bd4a;
+    --podium-ink: #e2bd4a;
+    --focus-ring: var(--race-red);
+    --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.55);
+}
+}
+
+[data-theme="pit"],
+[data-theme="dark"] {
   color-scheme: dark;
   --surface-page: #12100d;
   --surface-card: #1c1915;
