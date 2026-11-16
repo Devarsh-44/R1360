@@ -4,8 +4,9 @@ import { COMPOUND_NAME } from "./lib/data";
 import { signed } from "./lib/format";
 import { Wordmark } from "./Wordmark";
 
-export const REPO_BACKEND = "https://github.com/Devarsh-44/raceintel360";
-export const REPO_FRONTEND = "https://github.com/Devarsh-44/raceintel360-frontend";
+export const REPO = "https://github.com/Devarsh-44/ri360";
+export const REPO_BACKEND = `${REPO}/tree/main/backend`;
+export const REPO_FRONTEND = `${REPO}/tree/main/frontend`;
 
 const NAV: [string, string][] = [
   ["", "Overview"],
@@ -90,7 +91,7 @@ export function Footer({ generated }: { generated?: string }) {
           <div className="data-label">Code</div>
           <div style={{ marginTop: 8 }}>
             <a href={REPO_BACKEND} target="_blank" rel="noreferrer">Backend and data pipeline ↗</a>
-            <a href={REPO_FRONTEND} target="_blank" rel="noreferrer">Frontend repository ↗</a>
+            <a href={REPO_FRONTEND} target="_blank" rel="noreferrer">Website source ↗</a>
             <a href="#/method">How the numbers are made</a>
           </div>
         </div>

@@ -1,4 +1,4 @@
-"""Build the static data bundle that powers the RI360 website (web/public/data).
+"""Build the static data bundle that powers the RI360 website (frontend/public/data).
 
 Inputs
   data/lap_model_dataset.csv   lap table exported from the RaceIntel360 DB
@@ -6,8 +6,8 @@ Inputs
                                session clock, track status, weather)
 
 Outputs
-  web/public/data/index.json        seasons, race summaries, drivers, QA report
-  web/public/data/races/<id>.json   one file per race: laps, stints, model
+  frontend/public/data/index.json        seasons, race summaries, drivers, QA report
+  frontend/public/data/races/<id>.json   one file per race: laps, stints, model
 
 Run from the repository root:  python data_pipeline/build_site_data.py
 Only pandas and numpy are required.
@@ -27,7 +27,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 CSV = ROOT / "data" / "lap_model_dataset.csv"
 CACHE = ROOT / "cache"
-OUT = ROOT / "web" / "public" / "data"
+OUT = ROOT.parent / "frontend" / "public" / "data"
 
 DRY = ["SOFT", "MEDIUM", "HARD"]
 SHORT = {"SOFT": "S", "MEDIUM": "M", "HARD": "H", "INTERMEDIATE": "I", "WET": "W"}

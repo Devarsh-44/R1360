@@ -76,3 +76,11 @@ temp/
 models/lap_time_model.pkl
 fastf1_cache/
 *.cache
+
+# Node / frontend
+node_modules/
+frontend/dist/
+.vercel/
+
+# Python packaging rules above must not hide the website source
+!frontend/src/lib/

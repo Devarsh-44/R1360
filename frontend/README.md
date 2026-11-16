@@ -11,21 +11,21 @@ The public site for RaceIntel360: race traces, tyre strategies, a fitted pace mo
 ## Run it
 
 ```bash
-cd web
+cd frontend
 npm install
 npm run dev        # http://localhost:3000
-npm run build      # static site in web/dist
+npm run build      # static site in frontend/dist
 ```
 
 The site needs no server: it reads the JSON bundle in `public/data/`. Rebuild that bundle from the lap table and FastF1 cache with:
 
 ```bash
-python data_pipeline/build_site_data.py
+cd ../backend && python data_pipeline/build_site_data.py
 ```
 
 ## Deploy on Vercel
 
-Import the repository, set **Root Directory** to `web`, framework preset **Vite**. Build command `npm run build`, output `dist`. Routing uses the URL hash, so no rewrites are needed.
+The repository root has a `vercel.json` that builds this folder, so import the repo on Vercel and leave **Root Directory** empty. See the root README for details. Routing uses the URL hash, so no rewrites are needed.
 
 ## Design
 

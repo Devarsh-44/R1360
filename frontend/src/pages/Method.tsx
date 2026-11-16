@@ -85,8 +85,8 @@ export function Method({ index }: { index: Index }) {
       </div>
 
       <div className="row" style={{ marginTop: 48 }}>
-        <a className="ri-btn ri-btn--primary" href={REPO_BACKEND} target="_blank" rel="noreferrer">Backend repository ↗</a>
-        <a className="ri-btn ri-btn--secondary" href={REPO_FRONTEND} target="_blank" rel="noreferrer">Frontend repository ↗</a>
+        <a className="ri-btn ri-btn--primary" href={REPO_BACKEND} target="_blank" rel="noreferrer">Backend source ↗</a>
+        <a className="ri-btn ri-btn--secondary" href={REPO_FRONTEND} target="_blank" rel="noreferrer">Website source ↗</a>
       </div>
     </div>
   );
