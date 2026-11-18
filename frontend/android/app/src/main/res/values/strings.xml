@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">RI360</string>
+    <string name="title_activity_main">RI360</string>
+    <string name="package_name">io.github.devarsh44.ri360</string>
+    <string name="custom_url_scheme">io.github.devarsh44.ri360</string>
+</resources>

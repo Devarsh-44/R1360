@@ -98,7 +98,8 @@ button { font: inherit; color: inherit; }
 .section-head .lede { margin-top: var(--space-3); color: var(--text-muted); font-size: 16px; line-height: 24px; }
 
 /* ---------- header ---------- */
-.site-header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--surface-page) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line-subtle); }
+/* Top: 0 plus padding, so the header's background also fills the area behind the status bar / notch in the app. */
+.site-header { position: sticky; top: 0; padding-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px)); z-index: 20; background: color-mix(in srgb, var(--surface-page) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line-subtle); }
 .site-header .wrap { display: flex; align-items: center; gap: var(--space-5); height: 64px; }
 .brand { display: flex; align-items: center; text-decoration: none; flex: none; }
 .nav { display: flex; gap: var(--space-1); overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; }
@@ -117,7 +118,7 @@ button { font: inherit; color: inherit; }
 }
 
 /* ---------- footer ---------- */
-.site-footer { border-top: 1px solid var(--line-subtle); margin-top: var(--space-8); padding: var(--space-6) 0 var(--space-7); }
+.site-footer { border-top: 1px solid var(--line-subtle); margin-top: var(--space-8); padding: var(--space-6) 0 calc(var(--space-7) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))); }
 .site-footer .cols { display: grid; gap: var(--space-5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
 .site-footer a { color: var(--text-muted); text-decoration: none; display: block; padding: 2px 0; }
 .site-footer a:hover { color: var(--race-red); }

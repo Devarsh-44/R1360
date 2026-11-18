@@ -1,6 +1,7 @@
 import { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { useIndex } from "./lib/data";
+import { initNative } from "./lib/native";
 import { useRoute } from "./lib/router";
 import { Home } from "./pages/Home";
 import { Lab } from "./pages/Lab";
@@ -62,6 +63,8 @@ function App() {
     </>
   );
 }
+
+void initNative();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
