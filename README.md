@@ -14,6 +14,12 @@ Race traces, tyre strategies, a fitted pace model for every race, and a strategy
 
 </div>
 
+### Launch film (30 s)
+
+[![Play the RI360 launch film](docs/media/launch-poster.jpg)](https://ri360.vercel.app/media/ri360-launch.mp4)
+
+[Watch the 16:9 film](https://ri360.vercel.app/media/ri360-launch.mp4) · [Watch the 9:16 cut for phones](https://ri360.vercel.app/media/ri360-launch-vertical.mp4)
+
 ![RI360 overview page](docs/screenshots/overview.png)
 
 ## What you can do
@@ -88,12 +94,14 @@ R1360/
 │   ├── data_pipeline/        Fetch F1 data, build the dataset and the site data
 │   ├── strategy/             Strategy simulator
 │   ├── scripts/              Model training and helper scripts
-│   ├── data/                 lap_model_dataset.csv
-│   ├── cache/                FastF1 timing cache (source for the site data)
+│   ├── data/                 Lap table, OpenF1 race snapshots, race IDs, known gaps
+│   ├── cache/                FastF1 timing cache (2019–2023 source)
 │   ├── models/               Model feature list
 │   └── config/               Example settings and database schema
-├── docs/                     Deploy guide, mobile-app guide, screenshots
-├── .github/workflows/ci.yml  Checks that the site builds and the API starts
+├── docs/                     Deploy guide, mobile-app guide, screenshots, launch poster
+├── .github/workflows/
+│   ├── ci.yml                Checks that the site builds and the API starts
+│   └── update-data.yml       Adds each new race to the site every morning
 └── vercel.json               Vercel build settings
 ```
 
@@ -143,4 +151,4 @@ The website already runs inside an app wrapper with no code changes: it uses rel
 
 ## Credits
 
-Timing data comes from the FastF1 library (Formula 1 live-timing archive). RI360 is an independent project and is not affiliated with Formula 1, the FIA or any team. Formula 1 and related marks are trademarks of their owners.
+Timing data comes from the FastF1 library (Formula 1 live-timing archive) for 2019–2023 and from [OpenF1](https://openf1.org) from 2024 onward. RI360 is an independent project and is not affiliated with Formula 1, the FIA or any team. Formula 1 and related marks are trademarks of their owners.
