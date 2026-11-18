@@ -7,13 +7,19 @@ import { COMPOUND_NAME, compoundAt, shortName, useRace } from "../lib/data";
 import { dateLong, lapTime, median, secs, signed, stopsLabel } from "../lib/format";
 import { predictLap } from "../lib/model";
 import { href, replace } from "../lib/router";
+import { RaceStory, StoryLink } from "../Story";
 import { Delta, DriverTag, ErrorNote, Loading, Seg, StintBar } from "../ui";
 
-export function RacePage({ id, a, b, index }: { id: number; a: string | null; b: string | null; index: Index }) {
+export function RacePage({ id, a, b, index, story }: { id: number; a: string | null; b: string | null; index: Index; story?: boolean }) {
   const { data, error } = useRace(id);
   if (error) return <ErrorNote message={error} />;
   if (!data) return <Loading />;
-  return <RaceView race={data} a={a} b={b} index={index} />;
+  return (
+    <>
+      <RaceView race={data} a={a} b={b} index={index} />
+      {story && <RaceStory race={data} index={index} />}
+    </>
+  );
 }
 
 const NEUTRAL_LABEL = { SC: "SC", VSC: "VSC", RED: "RED" } as const;
@@ -54,6 +60,9 @@ function RaceView({ race, a: qa, b: qb, index }: { race: RaceT; a: string | null
           <div className="kicker" style={{ marginTop: 24 }}>{race.location} · {race.country} · Race analysis</div>
           <h1 className="display-l" style={{ marginTop: 8 }}>{race.year} {race.name}</h1>
           <p className="lede" style={{ marginTop: 16 }}>{narrative(race)}</p>
+          <div className="row" style={{ marginTop: 20 }}>
+            <StoryLink raceId={race.id} className="ri-btn ri-btn--primary story-btn">Race story</StoryLink>
+          </div>
           <div className="facts">
             <Fact k="Date" v={dateLong(race.date)} />
             <Fact k="Laps" v={String(race.laps)} />

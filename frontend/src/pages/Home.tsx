@@ -4,6 +4,7 @@ import { Legend, LineChart } from "../charts/LineChart";
 import { useRace, type Index, type Race } from "../lib/data";
 import { median, num } from "../lib/format";
 import { href } from "../lib/router";
+import { StoryLink } from "../Story";
 import { REPO_BACKEND } from "../ui";
 
 const FEATURED = { race: 89, a: "VER", b: "HAM" }; // 2021 French GP
@@ -37,6 +38,7 @@ export function Home({ index }: { index: Index }) {
     return { year: s.year, d, races: s.races.length, laps, name: index.people[d.code]?.name ?? d.code, next: Math.min(...rivals) };
   }, [seasons, races, index.people]);
 
+  const latest = races[races.length - 1];
   const dupPct = (qa.duplicateRows / qa.rawRows) * 100;
   const top = pitByCircuit[0];
   const low = pitByCircuit[pitByCircuit.length - 1];
@@ -61,6 +63,13 @@ export function Home({ index }: { index: Index }) {
               <a className="ri-btn ri-btn--primary" href="#/races">Explore {totals.races} races</a>
               <a className="ri-btn ri-btn--secondary" href="#/lab">Open strategy lab</a>
             </div>
+            {latest && (
+              <div className="latest-story">
+                <StoryLink raceId={latest.id} className="ri-btn ri-btn--ghost story-btn">
+                  Latest race story: {latest.year} {latest.name.replace(" Grand Prix", " GP")}
+                </StoryLink>
+              </div>
+            )}
           </div>
           <FeaturedTrace />
         </div>

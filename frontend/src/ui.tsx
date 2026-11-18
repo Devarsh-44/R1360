@@ -11,6 +11,7 @@ export const REPO_FRONTEND = `${REPO}/tree/main/frontend`;
 const NAV: [string, string][] = [
   ["", "Overview"],
   ["races", "Races"],
+  ["stories", "Stories"],
   ["lab", "Strategy lab"],
   ["seasons", "Seasons"],
   ["method", "Method"],
@@ -66,6 +67,28 @@ export function Header({ section }: { section: string }) {
         </button>
       </div>
     </header>
+  );
+}
+
+/** Bottom tab bar. Shown only inside the iOS/Android app (html.native); the website keeps its top navigation. */
+const TABS: [string, string, ReactNode][] = [
+  ["", "Overview", <path key="i" d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" strokeLinejoin="round" />],
+  ["races", "Races", <path key="i" d="M5 21V4h13l-2.5 4L18 12H5" strokeLinejoin="round" />],
+  ["stories", "Stories", <g key="i"><circle cx="12" cy="12" r="9" strokeDasharray="5 2.2" /><path d="M10 8.5v7l5.5-3.5z" fill="currentColor" stroke="none" /></g>],
+  ["lab", "Lab", <g key="i"><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3" /></g>],
+  ["seasons", "Seasons", <g key="i"><rect x="4" y="4" width="7" height="7" rx="1" /><rect x="13" y="4" width="7" height="7" rx="1" /><rect x="4" y="13" width="7" height="7" rx="1" /><rect x="13" y="13" width="7" height="7" rx="1" /></g>],
+];
+
+export function TabBar({ section }: { section: string }) {
+  return (
+    <nav className="tabbar" aria-label="App">
+      {TABS.map(([path, label, icon]) => (
+        <a key={path} href={`#/${path}`} aria-current={section === path ? "page" : undefined} className={path === "stories" ? "tab-stories" : undefined}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">{icon}</svg>
+          <span>{label}</span>
+        </a>
+      ))}
+    </nav>
   );
 }
 
