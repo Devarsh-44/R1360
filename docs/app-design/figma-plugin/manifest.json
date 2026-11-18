@@ -1,0 +1,9 @@
+{
+  "name": "RI360 App Builder",
+  "id": "ri360-app-builder-local",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": { "allowedDomains": ["none"] }
+}

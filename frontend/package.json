@@ -7,15 +7,25 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "data": "cd ../backend && python data_pipeline/build_site_data.py"
+    "data": "cd ../backend && python data_pipeline/build_site_data.py",
+    "build:mobile": "tsc --noEmit && vite build --mode mobile",
+    "cap:sync": "npm run build:mobile && cap sync",
+    "android": "npm run cap:sync && cap open android",
+    "ios": "npm run cap:sync && cap open ios"
   },
   "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/browser": "^8.0.5",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/ios": "^8.6.2",
     "d3-scale": "^4.0.2",
     "d3-shape": "^3.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.6.2",
     "@types/d3-scale": "^4.0.8",
     "@types/d3-shape": "^3.1.6",
     "@types/react": "^18.3.12",
