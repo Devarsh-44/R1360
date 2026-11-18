@@ -98,7 +98,7 @@ export function Footer({ generated }: { generated?: string }) {
         <div>
           <div className="data-label">Data</div>
           <p className="caption" style={{ marginTop: 8 }}>
-            Timing data from the FastF1 library (Formula 1 live-timing archive), 2019–2023 race sessions.
+            Timing data from the FastF1 library (2019–2023) and OpenF1 (2024 on), updated after every race.
             {generated ? ` Bundle built ${generated}.` : ""} Not affiliated with Formula 1.
           </p>
         </div>

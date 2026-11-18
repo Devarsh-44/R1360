@@ -106,6 +106,10 @@ export interface Index {
     rows: number;
     lapTimeAgreement: number;
     lapsCrossChecked: number;
+    /** races per timing source: FastF1 cache (2019–2023) or OpenF1 (2024 on) */
+    sources?: { fastf1: number; openf1: number };
+    /** finished races that are knowingly not on the site, and why */
+    knownGaps?: { races: [number, number][]; reason: string };
   };
   races: RaceSummary[];
   seasons: Season[];

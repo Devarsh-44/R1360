@@ -34,7 +34,15 @@ export function Method({ index }: { index: Index }) {
             endpoint, at <code>/races</code>, <code>/races/&#123;id&#125;/laps</code>, <code>/telemetry/fastest-lap</code> and <code>/strategy/simulate</code>.
           </p>
           <p>
-            Coverage: {totals.races} races from 2019 to 2023 ({index.seasons.map((s) => `${s.year}: ${s.races.length}`).join(", ")}). 2021 holds rounds 1–7 only.
+            The live-timing archive now requires an F1TV login, so races from 2024 on come from <a href="https://openf1.org" target="_blank" rel="noreferrer">OpenF1</a>, which
+            publishes the same timing feed (laps, sectors, stints, positions, race-control messages, weather) for free. A scheduled job downloads each race the day after it is run and
+            rebuilds this site. On 2023 races present in both sources, OpenF1 and FastF1 agree on every lap's tyre, stint and pit stop and on 98% of lap times to the millisecond;
+            the rest are lap 1, which the two sources time from a slightly different start.
+          </p>
+          <p>
+            Coverage: {totals.races} races from {index.seasons[0].year} to {index.seasons[index.seasons.length - 1].year} (
+            {index.seasons.map((s) => `${s.year}: ${s.races.length}`).join(", ")}).
+            {qa.knownGaps && qa.knownGaps.races.length > 0 ? ` Not included: ${qa.knownGaps.races.length} races (${qa.knownGaps.reason}).` : ""}
           </p>
 
           <h2 className="headline" style={{ marginTop: 32 }}>2 · Clean</h2>
@@ -44,8 +52,9 @@ export function Method({ index }: { index: Index }) {
             {" "}{num(qa.unknownCompoundRows)} laps with an unknown compound out of tyre analysis.
           </p>
           <p>
-            Each remaining lap is then joined to the raw FastF1 timing cache for sector times and the session clock, and its lap time compared: {(qa.lapTimeAgreement * 100).toFixed(2)}% agree to the
-            millisecond. Safety-car, virtual safety-car and red-flag periods come from the track-status feed, mapped to laps using the leader's clock.
+            Each remaining 2019–2023 lap is then joined to the raw FastF1 timing cache for sector times and the session clock, and its lap time compared: {(qa.lapTimeAgreement * 100).toFixed(2)}% of{" "}
+            {num(qa.lapsCrossChecked)} agree to the millisecond. Safety-car, virtual safety-car and red-flag periods come from the track-status feed (from race-control messages for OpenF1
+            races), mapped to laps using the leader's clock.
           </p>
           <p>
             A <b>clean lap</b> is a green-flag, dry-tyre lap that is not lap one, an in-lap or an out-lap, and is within 7% of the driver's median. Pace figures and the model use clean laps only.

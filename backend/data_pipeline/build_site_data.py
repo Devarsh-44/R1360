@@ -3,7 +3,9 @@
 Inputs
   data/lap_model_dataset.csv   lap table exported from the RaceIntel360 DB
   cache/<year>/<event>/<race>  raw FastF1 timing cache (driver info, sectors,
-                               session clock, track status, weather)
+                               session clock, track status, weather), 2019-2023
+  data/openf1/<year>/*.json.gz the same for 2024 on, saved from OpenF1
+                               (see openf1_source.py)
 
 Outputs
   frontend/public/data/index.json        seasons, race summaries, drivers, QA report
@@ -23,6 +25,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+import openf1_source as of1
 
 ROOT = Path(__file__).resolve().parents[1]
 CSV = ROOT / "data" / "lap_model_dataset.csv"
@@ -292,6 +296,8 @@ def main() -> None:
     qa["rows"] = int(len(df))
 
     dirs = cache_dirs()
+    snaps = {(s["year"], s["round"]): s for s in map(of1.load, of1.all_snapshots())}
+    sources = {"fastf1": 0, "openf1": 0}
     (OUT / "races").mkdir(parents=True, exist_ok=True)
     for old in (OUT / "races").glob("*.json"):
         old.unlink()
@@ -301,7 +307,12 @@ def main() -> None:
 
     for race_id, laps in df.groupby("race_id"):
         year, rnd, name = int(laps["year"].iat[0]), int(laps["round"].iat[0]), laps["race_name"].iat[0]
-        cache = read_cache(dirs[(year, norm(name))])
+        if year >= of1.FIRST_SEASON:
+            cache = of1.extras(snaps[(year, rnd)], LOCATION_ALIAS)
+            sources["openf1"] += 1
+        else:
+            cache = read_cache(dirs[(year, norm(name))])
+            sources["fastf1"] += 1
         laps = laps.merge(cache["ext"], on=["driver_code", "lap_number"], how="left")
 
         both = laps.dropna(subset=["raw_time"])
@@ -453,6 +464,11 @@ def main() -> None:
 
     qa["lapTimeAgreement"] = round(sector_matched / max(sector_checked, 1), 4)
     qa["lapsCrossChecked"] = int(sector_checked)
+    qa["sources"] = sources
+    gaps = ROOT / "data" / "known_gaps.json"
+    if gaps.exists():
+        g = json.loads(gaps.read_text())
+        qa["knownGaps"] = {"races": g["races"], "reason": g["reason"]}
 
     # ---------------- season tables ----------------
     pr = pd.DataFrame(pace_rows)

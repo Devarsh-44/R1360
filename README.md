@@ -4,9 +4,9 @@
 
 # RI360 · RaceIntel360
 
-**Five seasons of Formula 1, read like a pit wall.**
+**Every Formula 1 season since 2019, read like a pit wall.**
 
-Race traces, tyre strategies, a fitted pace model for every race, and a strategy lab where you can re-run a Grand Prix on different tyres. All of it is built from 96,223 real timing laps (2019–2023).
+Race traces, tyre strategies, a fitted pace model for every race, and a strategy lab where you can re-run a Grand Prix on different tyres. All of it is built from real timing laps (172,337 across 157 races, 2019–2026), and new races are added automatically the morning after they're run.
 
 **[Open the live site → ri360.vercel.app](https://ri360.vercel.app)**
 
@@ -21,7 +21,7 @@ Race traces, tyre strategies, a fitted pace model for every race, and a strategy
 | Page | What it shows |
 |---|---|
 | **Overview** | Headline findings from the data: what a pit stop costs at each circuit, how fast each tyre compound wears, and who dominated each season. |
-| **Races** | All 89 races. Each one has a race trace, lap times, running order, every driver's tyre stints, the results with clean-air pace, best sectors, and a pace model checked against the real laps. |
+| **Races** | Every race since 2019 (2021 has rounds 1–7 only, see below). Each one has a race trace, lap times, running order, every driver's tyre stints, the results with clean-air pace, best sectors, and a pace model checked against the real laps. |
 | **Strategy lab** | Choose a race and a driver, plan the stints yourself, and see the predicted race time lap by lap. It also finds the fastest one-stop and two-stop plans. |
 | **Seasons** | A heat map of every driver's result, or pace, in every round. |
 | **Method** | How the data was cleaned and checked, how the model works, and its limits. |
@@ -99,20 +99,27 @@ R1360/
 
 ## How the data is made
 
-1. `backend/data_pipeline/fetch_f1_data.py` downloads race timing with [FastF1](https://github.com/theOehrly/Fast-F1) into `backend/cache/`.
-2. `backend/data_pipeline/build_dataset.py` turns it into the lap table `backend/data/lap_model_dataset.csv`.
-3. `backend/data_pipeline/build_site_data.py` cleans that table and writes the website's data into `frontend/public/data/`:
-   - removes duplicate laps
-   - rebuilds tyre ages
-   - cross-checks every lap against the raw timing feed
-   - fits a pace model for each race
+There are two data sources:
 
-To rebuild the site data after changing the dataset:
+- **2019–2023:** [FastF1](https://github.com/theOehrly/Fast-F1). `backend/data_pipeline/fetch_f1_data.py` downloaded the timing into `backend/cache/`, and `build_dataset.py` turned it into the lap table `backend/data/lap_model_dataset.csv`. The F1 live-timing archive behind FastF1 now requires an F1TV login, so these races are kept as they are.
+- **2024 onward:** [OpenF1](https://openf1.org), which is free and needs no account. `backend/data_pipeline/openf1_source.py` saves each finished race as a small snapshot in `backend/data/openf1/<year>/`.
+
+`backend/data_pipeline/update_site_data.py` puts it together. It:
+
+1. downloads every finished race that isn't saved yet
+2. adds the 2024+ laps to the lap table, with fixed race IDs (`backend/data/race_ids.json`) so race links never change
+3. runs `build_site_data.py`, which removes duplicate laps, rebuilds tyre ages, cross-checks the FastF1 laps against the raw timing feed, fits a pace model for each race, and writes `frontend/public/data/`
+4. checks that every finished race since 2019 is on the site, apart from the ones listed in `backend/data/known_gaps.json`
 
 ```bash
 cd backend
-python data_pipeline/build_site_data.py
+python data_pipeline/update_site_data.py            # fetch new races and rebuild
+python data_pipeline/update_site_data.py --offline  # rebuild from saved data only
 ```
+
+### Automatic updates
+
+The [Update race data](.github/workflows/update-data.yml) workflow runs every morning at 06:00 UTC. When a race has finished, it downloads it, rebuilds the site data and pushes a commit to `main`, and Vercel then redeploys the site. On other days it commits nothing. If a finished race is still missing, the run fails and GitHub emails you. You can also start it by hand from the **Actions** tab.
 
 ## Turn it into a mobile app
 

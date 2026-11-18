@@ -73,7 +73,7 @@ tmp/
 temp/
 
 
-models/lap_time_model.pkl
+backend/models/lap_time_model.pkl
 fastf1_cache/
 *.cache
 

@@ -13,7 +13,7 @@ import "./styles/app.css";
 import { ErrorNote, Footer, Header, Loading } from "./ui";
 
 const TITLES: Record<string, string> = {
-  "": "RI360 | Race intelligence from 96,223 F1 laps",
+  "": "RI360 | Race intelligence from every F1 lap since 2019",
   races: "Races | RI360",
   race: "Race analysis | RI360",
   lab: "Strategy lab | RI360",

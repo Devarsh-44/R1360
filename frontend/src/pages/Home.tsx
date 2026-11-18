@@ -10,6 +10,7 @@ const FEATURED = { race: 89, a: "VER", b: "HAM" }; // 2021 French GP
 
 export function Home({ index }: { index: Index }) {
   const { totals, races, seasons, qa } = index;
+  const span = `${seasons[0].year}–${seasons[seasons.length - 1].year}`;
   const pitStops = races.reduce((a, r) => a + r.pitStops, 0);
   const neutral = races.reduce((a, r) => a + r.neutralLaps, 0);
 
@@ -46,14 +47,14 @@ export function Home({ index }: { index: Index }) {
       <section className="hero">
         <div className="wrap hero-grid">
           <div>
-            <div className="kicker">F1 race intelligence · 2019–2023</div>
+            <div className="kicker">F1 race intelligence · {span}</div>
             <h1 className="display-xl">
               {num(totals.laps)} laps.
               <br />
               <em>One pit wall.</em>
             </h1>
             <p className="lede">
-              RI360 turns five seasons of Formula 1 timing data into race traces, tyre-degradation models and a strategy simulator you can
+              RI360 turns {seasons.length} seasons of Formula 1 timing data into race traces, tyre-degradation models and a strategy simulator you can
               argue with. Every number on this site is computed from the raw lap table, checked against the original timing feed.
             </p>
             <div className="row">
@@ -97,7 +98,7 @@ export function Home({ index }: { index: Index }) {
               ariaLabel={`Pit-stop time loss by circuit: highest ${top.loc} at ${top.v.toFixed(1)} seconds, lowest ${low.loc} at ${low.v.toFixed(1)} seconds`}
             />
             <div className="spacer-v" />
-            <p className="ri-story__meta">Five highest and five lowest of {pitByCircuit.length} dry-race circuits · Source: FastF1 timing</p>
+            <p className="ri-story__meta">Five highest and five lowest of {pitByCircuit.length} dry-race circuits · Source: FastF1 and OpenF1 timing</p>
           </article>
 
           <article className="ri-card story">
@@ -183,9 +184,9 @@ export function Home({ index }: { index: Index }) {
 
       <section className="wrap section" style={{ paddingTop: 64 }}>
         <div className="grid g-3">
-          <Entry href="#/races" k="Races" t="Every Grand Prix, lap by lap" d="Race traces, tyre strategies, sector times and the fitted pace model for 89 races." />
+          <Entry href="#/races" k="Races" t="Every Grand Prix, lap by lap" d={`Race traces, tyre strategies, sector times and the fitted pace model for ${totals.races} races.`} />
           <Entry href="#/lab" k="Strategy lab" t="Re-run the race on other tyres" d="Build a plan stint by stint, see the predicted race time and the optimal one- and two-stop." />
-          <Entry href="#/seasons" k="Seasons" t="Five years on one grid" d="Results and clean-air pace for every driver, every round, 2019–2023." />
+          <Entry href="#/seasons" k="Seasons" t={`${seasons.length} years on one grid`} d={`Results and clean-air pace for every driver, every round, ${span}.`} />
         </div>
       </section>
     </>

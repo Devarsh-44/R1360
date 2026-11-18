@@ -3,7 +3,7 @@
 The public site for RaceIntel360: race traces, tyre strategies, a fitted pace model per race and a strategy lab, built from five seasons of real F1 timing data.
 
 - **Overview**: headline findings computed from the data (pit-lane cost by circuit, tyre degradation by compound, season dominance, data-quality audit).
-- **Races**: all 89 races, 2019–2023. Each race page has a race trace, lap-time and running-order charts, every driver's tyre stints, a sortable classification with clean-air pace, best sectors and the race's pace model checked against real laps.
+- **Races**: every race since 2019 (2021: rounds 1–7). Each race page has a race trace, lap-time and running-order charts, every driver's tyre stints, a sortable classification with clean-air pace, best sectors and the race's pace model checked against real laps.
 - **Strategy lab**: build a plan stint by stint; the race's model predicts every lap and searches every one- and two-stop plan for the fastest.
 - **Seasons**: results and pace for every driver and round as a heat map.
 - **Method**: how the data is cleaned, cross-checked and modelled, and the limits.
