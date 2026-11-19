@@ -1,8 +1,10 @@
-import { StrictMode, useEffect } from "react";
+import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { useIndex } from "./lib/data";
-import { initNative } from "./lib/native";
+import { initNative, isNative } from "./lib/native";
 import { useRoute } from "./lib/router";
+import { needsOnboarding, Onboarding } from "./Onboarding";
+import { PullToRefresh } from "./PullToRefresh";
 import { Home } from "./pages/Home";
 import { Lab } from "./pages/Lab";
 import { Method } from "./pages/Method";
@@ -24,8 +26,12 @@ const TITLES: Record<string, string> = {
   method: "Method | RI360",
 };
 
+const NATIVE = isNative();
+
 function App() {
   const { path, query } = useRoute();
+  // First-launch intro: app only. In development, #/intro-preview shows it in the browser for testing.
+  const [intro, setIntro] = useState(() => (NATIVE && needsOnboarding()) || (import.meta.env.DEV && window.location.hash === "#/intro-preview"));
   const { data: index, error } = useIndex();
   const section = path[0] ?? "";
   // opening or closing a story keeps the scroll position of the page behind it
@@ -62,9 +68,12 @@ function App() {
     <>
       <a className="skip" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById("main")?.focus(); }}>Skip to content</a>
       <Header section={section === "race" ? "races" : section} />
-      <main id="main" tabIndex={-1} style={{ outline: "none" }}>{page}</main>
+      {/* in the app each page fades in like a native screen; the website renders pages as before */}
+      <main id="main" tabIndex={-1} style={{ outline: "none" }} key={NATIVE ? key : undefined} className={NATIVE ? "page-in" : undefined}>{page}</main>
       <Footer generated={index?.generated} />
       <TabBar section={section === "race" ? "races" : section} />
+      {NATIVE && <PullToRefresh />}
+      {intro && index && <Onboarding index={index} onDone={() => setIntro(false)} />}
     </>
   );
 }

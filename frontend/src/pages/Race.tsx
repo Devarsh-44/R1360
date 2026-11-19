@@ -38,7 +38,6 @@ function RaceView({ race, a: qa, b: qb, index }: { race: RaceT; a: string | null
   };
 
   const bands: Band[] = race.neutral.map((n) => ({ from: n.from, to: n.to, label: NEUTRAL_LABEL[n.type] }));
-  const winner = race.drivers[0];
   const fastestDriver = race.drivers.find((d) => d.code === race.fastest.code);
   const year = index.races.filter((r) => r.year === race.year);
   const pos = year.findIndex((r) => r.id === race.id);
@@ -57,21 +56,13 @@ function RaceView({ race, a: qa, b: qb, index }: { race: RaceT; a: string | null
             {prev && <a href={href(`race/${prev.id}`)}>← {shortName(prev.name)}</a>}
             {next && <a href={href(`race/${next.id}`)}>{shortName(next.name)} →</a>}
           </nav>
-          <div className="kicker" style={{ marginTop: 24 }}>{race.location} · {race.country} · Race analysis</div>
+          <div className="kicker" style={{ marginTop: 24 }}>Round {race.round} · {race.location}{race.country && race.country !== race.location ? `, ${race.country}` : ""} · {dateLong(race.date)}</div>
           <h1 className="display-l" style={{ marginTop: 8 }}>{race.year} {race.name}</h1>
-          <p className="lede" style={{ marginTop: 16 }}>{narrative(race)}</p>
-          <div className="row" style={{ marginTop: 20 }}>
+          <div className="race-actions">
             <StoryLink raceId={race.id} className="ri-btn ri-btn--primary story-btn">Race story</StoryLink>
           </div>
-          <div className="facts">
-            <Fact k="Date" v={dateLong(race.date)} />
-            <Fact k="Laps" v={String(race.laps)} />
-            <Fact k="Winner" v={`${winner.code} · ${winner.team}`} />
-            <Fact k="Fastest lap" v={`${race.fastest.code} ${lapTime(race.fastest.time)} (L${race.fastest.lap})`} />
-            <Fact k="Pit loss" v={`${race.pitLoss.toFixed(1)}s`} />
-            {race.weather && <Fact k="Air / track" v={`${race.weather.air}° / ${race.weather.track}°C${race.weather.rain ? " · rain" : ""}`} />}
-            <Fact k="Neutralised" v={race.neutral.length ? race.neutral.map((n) => `${n.type} L${n.from}${n.to > n.from ? `–${n.to}` : ""}`).join(", ") : "None"} />
-          </div>
+          <RaceSummary race={race} />
+          <p className="race-lede">{narrative(race)}</p>
         </div>
       </section>
 
@@ -129,11 +120,65 @@ function RaceView({ race, a: qa, b: qb, index }: { race: RaceT; a: string | null
   );
 }
 
-function Fact({ k, v }: { k: string; v: string }) {
+/** The race at a glance: who won and how, then four numbers and the neutralised periods. */
+function RaceSummary({ race }: { race: RaceT }) {
+  const w = race.drivers[0];
+  const p2 = race.drivers[1];
+  const stops = Math.max(0, w.stints.length - 1);
+  const gap = p2?.g && w.g && p2.laps === w.laps ? (w.g[w.g.length - 1] ?? 0) - (p2.g[p2.g.length - 1] ?? 0) : null;
+  const lapped = p2 && p2.laps < w.laps ? w.laps - p2.laps : 0;
   return (
-    <div>
-      <span className="data-label">{k}</span>
-      <span className="v">{v}</span>
+    <div className="race-summary">
+      <div className="ri-card race-winner">
+        <div className="data-label">Winner</div>
+        <div className="rw-head">
+          <span className="ri-pill">{w.num}</span>
+          <span className="rw-name">{w.name}</span>
+        </div>
+        <div className="rw-meta">
+          {w.team} · {w.grid === 1 ? "from pole" : w.grid > 0 ? `from P${w.grid}` : "from the pit lane"}
+          {gap != null && gap > 0 && <span className="ri-delta ri-delta--gain">{gap.toFixed(1)}s ahead of {p2.code}</span>}
+          {lapped > 0 && <span className="ri-delta ri-delta--gain">lapped the field</span>}
+        </div>
+        <div className="rw-strategy">
+          <div className="data-label">Strategy · {stopsLabel(stops)}</div>
+          <StintBar stints={w.stints} total={race.laps} />
+          <div className="caption">{w.stints.map((st) => `${COMPOUND_NAME[st.c]} L${st.from}–${st.to}`).join(" → ")}</div>
+        </div>
+      </div>
+      <div className="race-stats">
+        <div className="ri-card race-stat">
+          <div className="data-label">Laps</div>
+          <div className="rs-v">{race.laps}</div>
+          <div className="caption">{race.pitStops} pit stops</div>
+        </div>
+        <div className="ri-card race-stat">
+          <div className="data-label">Fastest lap</div>
+          <div className="rs-v">{lapTime(race.fastest.time)}</div>
+          <div className="caption">{race.fastest.code} · lap {race.fastest.lap}</div>
+        </div>
+        <div className="ri-card race-stat">
+          <div className="data-label">Pit stop cost</div>
+          <div className="rs-v">{race.pitLoss.toFixed(1)}s</div>
+          <div className="caption">time lost per stop</div>
+        </div>
+        <div className="ri-card race-stat">
+          <div className="data-label">Weather</div>
+          <div className="rs-v">{race.wetShare > 0.1 ? `${Math.round(race.wetShare * 100)}% wet` : race.weather?.rain ? "Rain" : "Dry"}</div>
+          <div className="caption">{race.weather ? `Air ${Math.round(race.weather.air)}° · track ${Math.round(race.weather.track)}°C` : "No weather data"}</div>
+        </div>
+      </div>
+      <div className="race-flags" aria-label="Neutralised periods">
+        {race.neutral.length ? (
+          race.neutral.map((n, i) => (
+            <span key={i} className={`flag-chip flag-${n.type.toLowerCase()}`}>
+              {n.type === "RED" ? "Red flag" : n.type === "SC" ? "Safety car" : "Virtual safety car"} · {n.to > n.from ? `laps ${n.from}–${n.to}` : `lap ${n.from}`}
+            </span>
+          ))
+        ) : (
+          <span className="flag-chip flag-green">Green flag all race</span>
+        )}
+      </div>
     </div>
   );
 }

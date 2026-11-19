@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import type { Compound, RaceDriver, Stint } from "./lib/data";
 import { COMPOUND_NAME } from "./lib/data";
 import { signed } from "./lib/format";
+import { haptic } from "./lib/native";
 import { Wordmark } from "./Wordmark";
 
 export const REPO = "https://github.com/Devarsh-44/R1360";
@@ -83,7 +84,7 @@ export function TabBar({ section }: { section: string }) {
   return (
     <nav className="tabbar" aria-label="App">
       {TABS.map(([path, label, icon]) => (
-        <a key={path} href={`#/${path}`} aria-current={section === path ? "page" : undefined} className={path === "stories" ? "tab-stories" : undefined}>
+        <a key={path} href={`#/${path}`} aria-current={section === path ? "page" : undefined} className={path === "stories" ? "tab-stories" : undefined} onClick={() => haptic("tap")}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">{icon}</svg>
           <span>{label}</span>
         </a>

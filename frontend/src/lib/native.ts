@@ -30,3 +30,19 @@ export async function initNative(): Promise<void> {
   syncBars();
   new MutationObserver(syncBars).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 }
+
+export const isNative = (): boolean => Capacitor.isNativePlatform();
+
+type Buzz = "tap" | "step" | "success";
+let hapticsMod: Promise<typeof import("@capacitor/haptics")> | null = null;
+
+/** A short vibration inside the app; does nothing on the website. */
+export function haptic(kind: Buzz = "tap"): void {
+  if (!Capacitor.isNativePlatform()) return;
+  hapticsMod ??= import("@capacitor/haptics");
+  void hapticsMod
+    .then(({ Haptics, ImpactStyle, NotificationType }) =>
+      kind === "success" ? Haptics.notification({ type: NotificationType.Success }) : Haptics.impact({ style: kind === "step" ? ImpactStyle.Medium : ImpactStyle.Light }),
+    )
+    .catch(() => undefined);
+}

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import type { Index, Race, Stint } from "./lib/data";
 import { COMPOUND_NAME } from "./lib/data";
-import { closeStory, href, openStory } from "./lib/router";
+import { haptic } from "./lib/native";
+import { closeStory, href, openStory, storyToRace } from "./lib/router";
 import { buildStory, type StoryCard } from "./lib/story";
 import { markSeen } from "./pages/Stories";
 
@@ -37,8 +39,16 @@ export function RaceStory({ race, index }: { race: Race; index: Index }) {
   const card = cards[Math.min(i, last)];
 
   const close = useCallback(() => closeStory(race.id), [race.id]);
-  const next = useCallback(() => setI((v) => Math.min(v + 1, last)), [last]);
-  const prev = useCallback(() => setI((v) => Math.max(v - 1, 0)), []);
+  const next = useCallback(() => {
+    if (i >= last) return;
+    haptic("tap");
+    setI(i + 1);
+  }, [i, last]);
+  const prev = useCallback(() => {
+    if (i <= 0) return;
+    haptic("tap");
+    setI(i - 1);
+  }, [i]);
 
   useEffect(() => markSeen(race.id), [race.id]);
 
@@ -110,7 +120,9 @@ export function RaceStory({ race, index }: { race: Race; index: Index }) {
   const running = !held && !paused && i < last;
   const bigSize: CSSProperties = { fontSize: `min(132px, ${(170 / Math.max(4, card.big.length)).toFixed(1)}cqi)` };
 
-  return (
+  // Portalled to <body>: inside the app each page sits in an animated <main>, which would trap a
+  // position:fixed overlay (wrong size, and under the sticky header and tab bar).
+  return createPortal(
     <div className="story-overlay" role="presentation">
       <div
         ref={dialog}
@@ -177,7 +189,7 @@ export function RaceStory({ race, index }: { race: Race; index: Index }) {
 
         <div className="story-foot">
           {card.id === "full" ? (
-            <a className="story-cta" href={href(`race/${race.id}`)} onClick={(e) => { e.preventDefault(); close(); }}>
+            <a className="story-cta" href={href(`race/${race.id}`)} onClick={(e) => { e.preventDefault(); storyToRace(race.id); }}>
               Open the full race
               <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none" /></svg>
             </a>
@@ -186,7 +198,8 @@ export function RaceStory({ race, index }: { race: Race; index: Index }) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
