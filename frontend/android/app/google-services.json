@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "443133845015",
+    "project_id": "ri360-e7e2b",
+    "storage_bucket": "ri360-e7e2b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:443133845015:android:dc5746f38c366a0ed6c652",
+        "android_client_info": {
+          "package_name": "io.github.devarsh44.ri360"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCv_dsIRRS64b2h1SJhJtuSe8ZJwqBsT7U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

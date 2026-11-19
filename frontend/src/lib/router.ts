@@ -31,13 +31,25 @@ export function href(path: string, query?: Record<string, string | number | null
 
 /** Open a race story on top of the current page, so closing it returns here. */
 export function openStory(raceId: number) {
-  history.pushState({ ri360Story: true }, "", href(`race/${raceId}/story`));
+  history.pushState({ ri360Story: true, from: window.location.hash }, "", href(`race/${raceId}/story`));
   window.dispatchEvent(new HashChangeEvent("hashchange"));
 }
 
 /** Close a story: back to where it was opened from, or to its race page when it was opened by link. */
 export function closeStory(raceId: number) {
   if ((history.state as { ri360Story?: boolean } | null)?.ri360Story) history.back();
+  else replace(`race/${raceId}`);
+}
+
+/**
+ * Leave a story for its full race page. Opened from that race page: just go back to it.
+ * Opened anywhere else (Stories, Overview, a link): swap the story for the race page, so Back
+ * from the race returns to where the story was opened.
+ */
+export function storyToRace(raceId: number) {
+  const st = history.state as { ri360Story?: boolean; from?: string } | null;
+  const racePath = href(`race/${raceId}`);
+  if (st?.ri360Story && st.from?.split("?")[0] === racePath) history.back();
   else replace(`race/${raceId}`);
 }
 

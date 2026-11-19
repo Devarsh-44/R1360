@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 export type Compound = "S" | "M" | "H" | "I" | "W" | "?";
 
@@ -119,23 +120,66 @@ export interface Index {
 const base = import.meta.env.BASE_URL;
 const cache = new Map<string, Promise<unknown>>();
 
+/**
+ * Inside the app the data bundled at build time goes stale after the next race, so the app asks the
+ * live site for the race list (revalidating with its ETag) and falls back to the bundled copy when
+ * offline or slow; race files come from the bundle unless the race is newer than the build.
+ * The website just reads its own files.
+ */
+const NATIVE = Capacitor.isNativePlatform();
+const LIVE = "https://ri360.vercel.app/";
+const LIVE_TIMEOUT_MS = 5000;
+
+async function fetchJson(url: string, init?: RequestInit, timeoutMs?: number): Promise<unknown> {
+  const ctl = new AbortController();
+  const timer = timeoutMs ? window.setTimeout(() => ctl.abort(), timeoutMs) : 0;
+  try {
+    const r = await fetch(url, { ...init, signal: ctl.signal });
+    if (!r.ok) throw new Error(`${r.status}`);
+    return await r.json();
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
 function load<T>(path: string): Promise<T> {
   let p = cache.get(path);
   if (!p) {
-    p = fetch(`${base}data/${path}`).then((r) => {
-      if (!r.ok) throw new Error(`Could not load ${path} (${r.status})`);
-      return r.json();
-    });
+    const local = () =>
+      fetchJson(`${base}data/${path}`).catch((e: Error) => {
+        throw new Error(`Could not load ${path} (${e.message})`);
+      });
+    const live = () => fetchJson(`${LIVE}data/${path}`, { cache: "no-cache" }, LIVE_TIMEOUT_MS);
+    // A finished race never changes, so the bundled copy opens instantly; only races newer than the
+    // app's build come from the live site. The index (the list of races) always checks live first.
+    p = !NATIVE ? local() : path.startsWith("races/") ? local().catch(live) : live().catch(local);
     p.catch(() => cache.delete(path));
     cache.set(path, p);
   }
   return p as Promise<T>;
 }
 
+// refreshData() bumps this, and every mounted data hook fetches again (keeping what it shows until the new data lands)
+let version = 0;
+const listeners = new Set<() => void>();
+const subscribe = (fn: () => void) => {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+};
+
+/** Drop cached data and fetch everything on screen again (the app's pull-to-refresh). Resolves when the index is back. */
+export function refreshData(): Promise<unknown> {
+  cache.clear();
+  version++;
+  listeners.forEach((fn) => fn());
+  return load("index.json").catch(() => null);
+}
+
 type State<T> = { data: T | null; error: string | null };
 
 function useJson<T>(path: string | null): State<T> {
   const [state, setState] = useState<State<T> & { path: string | null }>({ data: null, error: null, path });
+  const v = useSyncExternalStore(subscribe, () => version);
   useEffect(() => {
     if (!path) return;
     let live = true;
@@ -145,7 +189,7 @@ function useJson<T>(path: string | null): State<T> {
     return () => {
       live = false;
     };
-  }, [path]);
+  }, [path, v]);
   // never hand back the previous race while the next one is loading
   return state.path === path ? state : { data: null, error: null };
 }

@@ -1,6 +1,7 @@
 import { useMemo, useState, type MouseEvent } from "react";
 import type { Index, RaceSummary } from "../lib/data";
 import { shortName } from "../lib/data";
+import { alertsChoice, disableAlerts, enableAlerts, pushSupported } from "../lib/push";
 import { href, openStory } from "../lib/router";
 
 const SEEN_KEY = "ri360-stories-seen";
@@ -47,6 +48,7 @@ export function Stories({ index }: { index: Index }) {
         <div className="kicker">Race stories</div>
         <h1 className="display-l" style={{ marginTop: 8 }}>Stories</h1>
         <p className="lede" style={{ marginTop: 12 }}>Every race in six cards: the winner, the biggest climb, the strategy call, the fastest car and the conditions. Tap one to play.</p>
+        {pushSupported() && <AlertsSwitch />}
 
         {latest && (
           <a className="story-latest" href={href(`race/${latest.id}/story`)} onClick={(e) => open(e, latest.id)}>
@@ -77,6 +79,34 @@ export function Stories({ index }: { index: Index }) {
           </section>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** App only: the on/off switch for "race analysed" notifications. */
+function AlertsSwitch() {
+  const [on, setOn] = useState(alertsChoice() === "on");
+  const [note, setNote] = useState("");
+  const toggle = async () => {
+    if (on) {
+      await disableAlerts();
+      setOn(false);
+      setNote("");
+      return;
+    }
+    const r = await enableAlerts();
+    setOn(r === "on");
+    setNote(r === "denied" ? "Notifications are off for RI360 in your phone's settings." : r === "unavailable" ? "Race alerts aren't available on this build yet." : "");
+  };
+  return (
+    <div className="alerts-row">
+      <div>
+        <div className="title" id="alerts-label">Race analysed alerts</div>
+        <div className="caption">{note || "A notification the morning after each Grand Prix, with its story."}</div>
+      </div>
+      <button className="switch" role="switch" aria-checked={on} aria-labelledby="alerts-label" onClick={toggle}>
+        <i />
+      </button>
     </div>
   );
 }
