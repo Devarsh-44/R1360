@@ -122,6 +122,7 @@ button { font: inherit; color: inherit; }
 .site-footer .cols { display: grid; gap: var(--space-5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
 .site-footer a { color: var(--text-muted); text-decoration: none; display: block; padding: 2px 0; }
 .site-footer a:hover { color: var(--race-red); }
+.footer-credit { display: block; padding: 2px 0; color: var(--text-primary); font-weight: 600; }
 
 /* ---------- design-system components ---------- */
 .ri-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); height: 40px; padding: 0 var(--space-4); border-radius: var(--radius-md); border: 1px solid transparent; font: 600 15px/1 var(--font-ui); cursor: pointer; text-decoration: none; transition: background-color .12s, border-color .12s; white-space: nowrap; }
