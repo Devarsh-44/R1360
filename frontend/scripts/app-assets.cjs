@@ -1,5 +1,6 @@
 // Builds the app icon and splash sources (assets/*.png) from public/ri360-mark.svg, then
-// `npm run app:assets` turns them into every Android and iOS size.
+// `npm run app:assets` turns them into every Android and iOS size (the generator is fetched on demand,
+// so its old dependencies never sit in the project or trip the CI audit).
 const fs = require("fs");
 const path = require("path");
 const sharp = require(path.resolve("node_modules/sharp"));

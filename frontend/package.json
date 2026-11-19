@@ -12,7 +12,7 @@
     "cap:sync": "npm run build:mobile && cap sync",
     "android": "npm run cap:sync && cap open android",
     "ios": "npm run cap:sync && cap open ios",
-    "app:assets": "node scripts/app-assets.cjs && capacitor-assets generate --android --ios --iconBackgroundColor \"#d7261e\" --iconBackgroundColorDark \"#d7261e\" --splashBackgroundColor \"#f7f3ea\" --splashBackgroundColorDark \"#12100d\""
+    "app:assets": "npm install --no-save sharp@^0.34 && node scripts/app-assets.cjs && npx --yes @capacitor/assets@3 generate --android --ios --iconBackgroundColor \"#d7261e\" --iconBackgroundColorDark \"#d7261e\" --splashBackgroundColor \"#f7f3ea\" --splashBackgroundColorDark \"#12100d\""
   },
   "dependencies": {
     "@capacitor-firebase/messaging": "^8.6.0",
@@ -29,7 +29,6 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.6.2",
     "@types/d3-scale": "^4.0.8",
     "@types/d3-shape": "^3.1.6",
@@ -41,5 +40,8 @@
   },
   "engines": {
     "node": ">=20.19"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.13.6"
   }
 }
