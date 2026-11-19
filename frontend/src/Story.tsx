@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import { createPortal } from "react-dom";
 import type { Index, Race, Stint } from "./lib/data";
 import { COMPOUND_NAME } from "./lib/data";
-import { haptic } from "./lib/native";
+import { haptic, setStatusBarDark } from "./lib/native";
 import { alertsChoice, enableAlerts, pushSupported, snoozeAlerts } from "./lib/push";
 import { closeStory, href, openStory, storyToRace } from "./lib/router";
 import { buildStory, type StoryCard } from "./lib/story";
@@ -52,6 +52,9 @@ export function RaceStory({ race, index }: { race: Race; index: Index }) {
   }, [i]);
 
   useEffect(() => markSeen(race.id), [race.id]);
+  // status-bar icons follow the card's own background, then go back to the theme
+  useEffect(() => setStatusBarDark(THEME[card.tone] === "pit"), [card.tone]);
+  useEffect(() => () => setStatusBarDark(null), []);
 
   // modal housekeeping: lock page scroll, move focus in, give it back on close
   useEffect(() => {

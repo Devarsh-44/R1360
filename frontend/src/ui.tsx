@@ -2,8 +2,10 @@ import { useEffect, useState, type ReactNode } from "react";
 import type { Compound, RaceDriver, Stint } from "./lib/data";
 import { COMPOUND_NAME } from "./lib/data";
 import { signed } from "./lib/format";
-import { haptic } from "./lib/native";
+import { haptic, isNative } from "./lib/native";
 import { Wordmark } from "./Wordmark";
+
+const IN_APP = isNative();
 
 export const REPO = "https://github.com/Devarsh-44/R1360";
 export const REPO_BACKEND = `${REPO}/tree/main/backend`;
@@ -111,12 +113,23 @@ export function Footer({ generated }: { generated?: string }) {
             ))}
           </div>
         </div>
+        {/* the app credits its makers instead of linking source code; the website keeps the code links */}
         <div>
-          <div className="data-label">Code</div>
+          <div className="data-label">{IN_APP ? "About" : "Code"}</div>
           <div style={{ marginTop: 8 }}>
-            <a href={REPO_BACKEND} target="_blank" rel="noreferrer">Backend and data pipeline ↗</a>
-            <a href={REPO_FRONTEND} target="_blank" rel="noreferrer">Website source ↗</a>
+            {IN_APP ? (
+              <>
+                <span className="footer-credit">Built by RcIntel</span>
+                <a href="https://www.devarshkotak.com" target="_blank" rel="noreferrer">devarshkotak.com ↗</a>
+              </>
+            ) : (
+              <>
+                <a href={REPO_BACKEND} target="_blank" rel="noreferrer">Backend and data pipeline ↗</a>
+                <a href={REPO_FRONTEND} target="_blank" rel="noreferrer">Website source ↗</a>
+              </>
+            )}
             <a href="#/method">How the numbers are made</a>
+            <a href="https://ri360.vercel.app/privacy/" target="_blank" rel="noreferrer">Privacy policy</a>
           </div>
         </div>
         <div>
