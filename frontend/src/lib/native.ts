@@ -6,6 +6,16 @@ import { Capacitor, SystemBars, SystemBarsStyle } from "@capacitor/core";
  * - Android's back button goes back a page, and leaves the app on the overview
  * - status bar icons follow the paper (light) / pit wall (dark) theme
  */
+// a full-screen layer (a story card, the intro) can set the status bar for its own background
+let barOverride: boolean | null = null;
+let syncBars: () => void = () => undefined;
+
+/** Status-bar icons for what is on screen: true = a dark background (light icons), null = follow the theme. */
+export function setStatusBarDark(dark: boolean | null): void {
+  barOverride = dark;
+  syncBars();
+}
+
 export async function initNative(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   document.documentElement.classList.add("native");
@@ -25,8 +35,10 @@ export async function initNative(): Promise<void> {
     else void App.exitApp();
   });
 
-  const syncBars = () =>
-    void SystemBars.setStyle({ style: document.documentElement.dataset.theme === "pit" ? SystemBarsStyle.Dark : SystemBarsStyle.Light });
+  syncBars = () => {
+    const dark = barOverride ?? document.documentElement.dataset.theme === "pit";
+    void SystemBars.setStyle({ style: dark ? SystemBarsStyle.Dark : SystemBarsStyle.Light });
+  };
   syncBars();
   new MutationObserver(syncBars).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 }

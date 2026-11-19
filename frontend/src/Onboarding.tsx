@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Index } from "./lib/data";
 import { num } from "./lib/format";
-import { haptic } from "./lib/native";
+import { haptic, setStatusBarDark } from "./lib/native";
 import { openStory, replace } from "./lib/router";
 
 const KEY = "ri360-onboarded";
@@ -65,6 +65,11 @@ export function Onboarding({ index, onDone }: { index: Index; onDone: () => void
   useEffect(() => {
     if (out) welcome.current?.focus();
   }, [out]);
+  // the intro is always dark, whatever the app theme
+  useEffect(() => {
+    setStatusBarDark(true);
+    return () => setStatusBarDark(null);
+  }, []);
 
   const go = (to: () => void) => {
     markOnboarded();
@@ -128,6 +133,7 @@ export function Onboarding({ index, onDone }: { index: Index; onDone: () => void
             </button>
           </div>
           <button className="intro-start" onClick={() => go(() => replace(""))}>Start exploring</button>
+          <p className="intro-legal">Unofficial. Not associated with the Formula 1 companies. No account, no tracking.</p>
         </div>
       )}
     </div>

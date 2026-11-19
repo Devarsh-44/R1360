@@ -117,6 +117,7 @@ export function Footer({ generated }: { generated?: string }) {
             <a href={REPO_BACKEND} target="_blank" rel="noreferrer">Backend and data pipeline ↗</a>
             <a href={REPO_FRONTEND} target="_blank" rel="noreferrer">Website source ↗</a>
             <a href="#/method">How the numbers are made</a>
+            <a href="https://ri360.vercel.app/privacy/" target="_blank" rel="noreferrer">Privacy policy</a>
           </div>
         </div>
         <div>
