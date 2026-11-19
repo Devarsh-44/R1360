@@ -2,6 +2,7 @@ import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { useIndex } from "./lib/data";
 import { initNative, isNative } from "./lib/native";
+import { initPush } from "./lib/push";
 import { useRoute } from "./lib/router";
 import { needsOnboarding, Onboarding } from "./Onboarding";
 import { PullToRefresh } from "./PullToRefresh";
@@ -79,6 +80,7 @@ function App() {
 }
 
 void initNative();
+void initPush();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

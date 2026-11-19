@@ -9,6 +9,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <!-- Notifications ("race analysed"): status-bar icon, accent colour and default channel -->
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_ri360" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/ri360_red" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="race-analysed" />
+
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
             android:name=".MainActivity"

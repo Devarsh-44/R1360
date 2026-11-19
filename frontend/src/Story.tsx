@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import type { Index, Race, Stint } from "./lib/data";
 import { COMPOUND_NAME } from "./lib/data";
 import { haptic } from "./lib/native";
+import { alertsChoice, enableAlerts, pushSupported, snoozeAlerts } from "./lib/push";
 import { closeStory, href, openStory, storyToRace } from "./lib/router";
 import { buildStory, type StoryCard } from "./lib/story";
 import { markSeen } from "./pages/Stories";
@@ -188,6 +189,7 @@ export function RaceStory({ race, index }: { race: Race; index: Index }) {
         </article>
 
         <div className="story-foot">
+          {card.id === "full" && <AlertsAsk />}
           {card.id === "full" ? (
             <a className="story-cta" href={href(`race/${race.id}`)} onClick={(e) => { e.preventDefault(); storyToRace(race.id); }}>
               Open the full race
@@ -200,6 +202,35 @@ export function RaceStory({ race, index }: { race: Race; index: Index }) {
       </div>
     </div>,
     document.body,
+  );
+}
+
+/** App only, asked once: the end of a story is when "after every race" makes sense. */
+function AlertsAsk() {
+  const [state, setState] = useState<"ask" | "busy" | "on" | "denied" | "unavailable" | "hidden">(() =>
+    pushSupported() && alertsChoice() === null ? "ask" : "hidden",
+  );
+  if (state === "hidden") return null;
+  const yes = async () => {
+    setState("busy");
+    setState(await enableAlerts());
+  };
+  return (
+    <div className="story-ask" role="group" aria-label="Race alerts">
+      {state === "on" ? (
+        <span>Done. You'll get the story after every race.</span>
+      ) : state === "denied" ? (
+        <span>Notifications are off for RI360. You can allow them in your phone's settings.</span>
+      ) : state === "unavailable" ? (
+        <span>Race alerts aren't available on this build yet.</span>
+      ) : (
+        <>
+          <span>Get the story after every race?</span>
+          <button onClick={yes} disabled={state === "busy"}>Notify me</button>
+          <button className="is-quiet" onClick={() => { snoozeAlerts(); setState("hidden"); }}>Not now</button>
+        </>
+      )}
+    </div>
   );
 }
 
