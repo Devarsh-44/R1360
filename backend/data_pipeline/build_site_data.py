@@ -27,6 +27,7 @@ import numpy as np
 import pandas as pd
 
 import openf1_source as of1
+import starting_grid
 
 ROOT = Path(__file__).resolve().parents[1]
 CSV = ROOT / "data" / "lap_model_dataset.csv"
@@ -97,6 +98,7 @@ def read_cache(p: Path) -> dict:
         "neutral_times": [],
         "weather": None,
         "final": {},
+        "start": {},
     }
 
     for num, d in load_pkl(p / "driver_info.ff1pkl", {}).items():
@@ -120,6 +122,9 @@ def read_cache(p: Path) -> dict:
     # last value of the live position stream = classification on the road
     last_pos = stream.dropna(subset=["Position"]).groupby("Driver")["Position"].last()
     res["final"] = {num_to_tla[n]: int(p) for n, p in last_pos.items() if n in num_to_tla}
+    # first value = order before the start, a fallback for the official grid
+    first_pos = stream.dropna(subset=["Position"]).groupby("Driver")["Position"].first()
+    res["start"] = {num_to_tla[n]: int(p) for n, p in first_pos.items() if n in num_to_tla}
     res["ext"] = pd.DataFrame(
         {
             "driver_code": ext["code"].values,
@@ -298,6 +303,8 @@ def main() -> None:
     dirs = cache_dirs()
     snaps = {(s["year"], s["round"]): s for s in map(of1.load, of1.all_snapshots())}
     sources = {"fastf1": 0, "openf1": 0}
+    grids = starting_grid.load()
+    grid_fallback = []  # races without an official starting grid
     (OUT / "races").mkdir(parents=True, exist_ok=True)
     for old in (OUT / "races").glob("*.json"):
         old.unlink()
@@ -361,6 +368,17 @@ def main() -> None:
         clean_med = laps[laps["clean"]].groupby("driver_code")["lap_time_secs"].agg(["median", "size"])
         best_med = clean_med.loc[clean_med["size"] >= 8, "median"].min() if len(clean_med) else np.nan
 
+        # starting slot after grid penalties, 0 = pit lane (starting_grid.py);
+        # until Jolpica publishes the race, the order before the start
+        official = grids.get(f"{year}-{rnd}", {})
+        if any(c not in official for c in order):
+            grid_fallback.append(f"{year}-{rnd}")
+
+        def grid_of(code: str, dl: pd.DataFrame) -> int:
+            if code in official:
+                return int(official[code])
+            return int(cache["start"].get(code, dl["position"].iat[0]))
+
         drivers_out = []
         for pos, code in enumerate(order, start=1):
             dl = laps[laps["driver_code"] == code].sort_values("lap_number")
@@ -395,7 +413,7 @@ def main() -> None:
                     "team": meta["team"],
                     "num": meta["num"],
                     "pos": pos,
-                    "grid": int(dl["position"].iat[0]),
+                    "grid": grid_of(code, dl),
                     "laps": int(dl["lap_number"].max()),
                     "best": r3(best["lap_time_secs"]),
                     "bestLap": int(best["lap_number"]),
@@ -465,6 +483,7 @@ def main() -> None:
     qa["lapTimeAgreement"] = round(sector_matched / max(sector_checked, 1), 4)
     qa["lapsCrossChecked"] = int(sector_checked)
     qa["sources"] = sources
+    qa["gridFallback"] = grid_fallback
     gaps = ROOT / "data" / "known_gaps.json"
     if gaps.exists():
         g = json.loads(gaps.read_text())
@@ -521,6 +540,8 @@ def main() -> None:
 
     size = sum(p.stat().st_size for p in OUT.rglob("*.json"))
     print(f"races={len(races)} laps={qa['rows']} duplicates_removed={qa['duplicateRows']}")
+    if grid_fallback:
+        print(f"no official starting grid for {len(grid_fallback)} race(s), used the pre-start order: {grid_fallback}")
     print(f"lap-time agreement with raw timing: {qa['lapTimeAgreement']:.2%} of {sector_checked}")
     print(f"wrote {OUT} ({size/1e6:.1f} MB)")
 

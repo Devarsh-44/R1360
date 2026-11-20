@@ -188,7 +188,7 @@ function narrative(r: RaceT): string {
   const p2 = r.drivers[1];
   const stops = w.stints.length - 1;
   const comps = w.stints.map((s) => COMPOUND_NAME[s.c].toLowerCase()).join("–");
-  const parts = [`${w.name} won on a ${stopsLabel(stops)} ${comps} strategy, ${w.grid === 1 ? "leading from lap one" : `from P${w.grid} after lap one`}`];
+  const parts = [`${w.name} won on a ${stopsLabel(stops)} ${comps} strategy, ${w.grid === 1 ? "from pole" : w.grid > 0 ? `from P${w.grid} on the grid` : "from the pit lane"}`];
   const gapP2 = p2.g && w.g ? (w.g[w.g.length - 1] ?? 0) - (p2.g[p2.g.length - 1] ?? 0) : null;
   if (gapP2 != null && p2.laps === w.laps && gapP2 > 0) parts[0] += `, ${gapP2.toFixed(1)}s clear of ${p2.code}`;
   parts[0] += ".";
@@ -308,13 +308,15 @@ type SortKey = "pos" | "best" | "pace" | "gained";
 function Classification({ race, a, b, onPick, fastest }: { race: RaceT; a: string; b: string; onPick: (c: string) => void; fastest?: string }) {
   const [sort, setSort] = useState<SortKey>("pos");
   const bestPace = Math.min(...race.drivers.map((d) => d.pace ?? Infinity));
+  // a pit-lane start (grid 0) counts as starting behind the whole field
+  const start = (d: RaceDriver) => (d.grid > 0 ? d.grid : race.drivers.length);
   const rows = useMemo(() => {
     const r = [...race.drivers];
     const key: Record<SortKey, (d: RaceDriver) => number> = {
       pos: (d) => d.pos,
       best: (d) => d.best ?? Infinity,
       pace: (d) => d.pace ?? Infinity,
-      gained: (d) => d.pos - d.grid,
+      gained: (d) => d.pos - start(d),
     };
     return r.sort((x, y) => key[sort](x) - key[sort](y));
   }, [race, sort]);
@@ -339,7 +341,7 @@ function Classification({ race, a, b, onPick, fastest }: { race: RaceT; a: strin
               {th("pos", "Pos")}
               <th>Driver</th>
               <th>Team</th>
-              {th("gained", "From L1")}
+              {th("gained", "Grid")}
               <th>Strategy</th>
               {th("best", "Best lap")}
               {th("pace", "Pace")}
@@ -348,7 +350,7 @@ function Classification({ race, a, b, onPick, fastest }: { race: RaceT; a: strin
           </thead>
           <tbody>
             {rows.map((d) => {
-              const gained = d.grid - d.pos;
+              const gained = start(d) - d.pos;
               return (
                 <tr key={d.code} className={`clickable ${d.code === a || d.code === b ? "is-focus" : ""}`} onClick={() => onPick(d.code)}>
                   <td className="num">{d.pos}</td>
@@ -359,7 +361,7 @@ function Classification({ race, a, b, onPick, fastest }: { race: RaceT; a: strin
                   </td>
                   <td style={{ fontFamily: "var(--font-ui)" }}>{d.team}</td>
                   <td className="num">
-                    P{d.grid} {gained !== 0 && <span className="muted">({gained > 0 ? "+" : "−"}{Math.abs(gained)})</span>}
+                    {d.grid > 0 ? `P${d.grid}` : "Pit lane"} {gained !== 0 && <span className="muted">({gained > 0 ? "+" : "−"}{Math.abs(gained)})</span>}
                   </td>
                   <td style={{ minWidth: 180 }}>
                     <StintBar stints={d.stints} total={race.laps} />
@@ -376,7 +378,7 @@ function Classification({ race, a, b, onPick, fastest }: { race: RaceT; a: strin
         </table>
       </div>
       <p className="caption" style={{ padding: "12px 24px 20px" }}>
-        “From L1” is the running position after lap one; the source table has no starting grid. {race.drivers.filter((d) => d.laps < race.laps).length} drivers did not complete the full distance.
+        “Grid” is the starting position after grid penalties. {race.drivers.filter((d) => d.laps < race.laps).length} drivers did not complete the full distance.
       </p>
     </div>
   );

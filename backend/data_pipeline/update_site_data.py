@@ -1,10 +1,11 @@
 """Bring the website data up to date. This is what the scheduled GitHub Action runs.
 
   1. download every finished race from 2024 on that is not saved yet (OpenF1)
-  2. rebuild the 2024+ rows of data/lap_model_dataset.csv from the saved races
+  2. fetch the official starting grid of races that lack one (Jolpica)
+  3. rebuild the 2024+ rows of data/lap_model_dataset.csv from the saved races
      (2019-2023 rows, which came from FastF1, are kept as they are)
-  3. rebuild frontend/public/data with build_site_data.py
-  4. check that no finished race is missing (exits with an error if one is)
+  4. rebuild frontend/public/data with build_site_data.py
+  5. check that no finished race is missing (exits with an error if one is)
 
 Usage (from backend/):
     python data_pipeline/update_site_data.py            # fetch new races + rebuild
@@ -26,6 +27,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import openf1_source as of1  # noqa: E402
+import starting_grid  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 CSV = ROOT / "data" / "lap_model_dataset.csv"
@@ -94,6 +96,9 @@ def main() -> None:
     csv = merge_openf1_rows(pd.read_csv(CSV))
     csv.to_csv(CSV, index=False)
     log.info(f"lap table: {len(csv)} rows, {csv['race_id'].nunique()} races -> {CSV.relative_to(ROOT)}")
+    if not args.offline:
+        races = csv[["year", "round"]].drop_duplicates().astype(int).values.tolist()
+        starting_grid.update(sorted(map(tuple, races)))
 
     subprocess.run([sys.executable, str(ROOT / "data_pipeline" / "build_site_data.py")], check=True, cwd=ROOT)
     if args.train:

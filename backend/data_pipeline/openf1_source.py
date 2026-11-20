@@ -278,6 +278,7 @@ def extras(snap: dict, location_alias: dict[str, str]) -> dict:
         "neutral_times": [],
         "weather": None,
         "final": {},
+        "start": {},
         # lap times here are the timing feed itself, so there is nothing to cross-check
         "source": "openf1",
     }
@@ -413,4 +414,10 @@ def extras(snap: dict, location_alias: dict[str, str]) -> dict:
         for num, p in pos.groupby("driver_number")["position"].last().items():
             if num in tla:
                 res["final"][tla[num]] = int(p)
+    # order before the start, a fallback for the official grid (starting_grid.py);
+    # it cannot tell a pit-lane start from the back row
+    pos = pd.DataFrame(snap["position"]).sort_values("date")
+    for num, p in pos.groupby("driver_number")["position"].first().items():
+        if num in tla:
+            res["start"][tla[num]] = int(p)
     return res

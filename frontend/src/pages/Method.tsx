@@ -88,7 +88,7 @@ export function Method({ index }: { index: Index }) {
           <h2 className="headline" style={{ marginTop: 32 }}>Limits</h2>
           <p>
             The model knows nothing about traffic, dirty air, safety-car timing or tyre warm-up, and treats wear as linear. It is a clear way to compare plans, not a race predictor.
-            Running position after lap one stands in for the starting grid, which the source table does not hold.
+            Starting positions are the official grid after penalties, from the Jolpica F1 database; a pit-lane start counts as starting last.
           </p>
         </section>
       </div>
