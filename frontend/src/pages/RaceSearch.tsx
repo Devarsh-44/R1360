@@ -66,7 +66,19 @@ export function RaceSearch({ index, onPick }: { index: Index; onPick: (race: Rac
         spellCheck={false}
         value={q}
         onChange={(e) => { setQ(e.target.value); setHi(0); setOpen(true); }}
-        onFocus={(e) => { setOpen(true); e.target.select(); }}
+        onFocus={(e) => {
+          setOpen(true);
+          e.target.select();
+          // phones: the keyboard takes the bottom half, so lift the box to just under the header to leave room for results
+          if (window.matchMedia?.("(pointer: coarse)").matches) {
+            const el = e.target;
+            setTimeout(() => {
+              const header = document.querySelector<HTMLElement>(".site-header")?.offsetHeight ?? 64;
+              const top = el.getBoundingClientRect().top + window.scrollY - header - 12;
+              if (Math.abs(top - window.scrollY) > 8) window.scrollTo({ top, behavior: "smooth" });
+            }, 280);
+          }
+        }}
         onBlur={() => setTimeout(() => setOpen(false), 120)}
         onKeyDown={(e) => {
           if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true); setHi((h) => Math.min(h + 1, results.length - 1)); }
