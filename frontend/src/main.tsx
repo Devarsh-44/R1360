@@ -50,7 +50,7 @@ function App() {
   let page = null;
   if (error) page = <ErrorNote message={error} />;
   else if (!index) page = <Loading />;
-  else if (section === "races") page = <Races index={index} year={int(query.get("y"))} />;
+  else if (section === "races") page = <Races index={index} year={int(query.get("y"))} focus={int(query.get("r"))} />;
   else if (section === "race" && int(path[1]) != null) page = <RacePage index={index} id={int(path[1])!} a={query.get("a")} b={query.get("b")} story={path[2] === "story"} />;
   else if (section === "stories") page = <Stories index={index} />;
   else if (section === "lab") page = <Lab index={index} raceId={int(query.get("race"))} driver={query.get("driver")} />;
