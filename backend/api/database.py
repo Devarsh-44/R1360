@@ -4,6 +4,7 @@ import logging
 import os
 from typing import AsyncGenerator
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
@@ -48,7 +49,7 @@ async def ping_db() -> bool:
     """Ping database to check connection."""
     try:
         async with _engine.connect() as conn:
-            await conn.execute("SELECT 1")
+            await conn.execute(text("SELECT 1"))
         return True
     except Exception as e:
         log.error("DB ping failed: %s", e)
