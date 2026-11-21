@@ -1,10 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Index, RaceSummary } from "../lib/data";
 import { shortName } from "../lib/data";
+import { haptic } from "../lib/native";
 import { href } from "../lib/router";
 import { RaceCard } from "./Races";
 
 const reduced = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+// phones and tablets: fewer cards drawn in the stack, so low-end devices composite fewer 3D layers
+const touch = () => typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches;
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
 /**
@@ -21,31 +24,44 @@ export function RaceDeck({ index, races, focus }: { index: Index; races: RaceSum
   const [active, setActive] = useState(0);
   const [found, setFound] = useState(-1);
   const activeRef = useRef(0);
+  const lastBuzz = useRef(0);
+  const isTouch = useRef(touch());
 
   const layout = () => {
     const st = s.current;
     const w = cards.current[0]?.offsetWidth ?? 320;
+    // on a phone the front card takes most of the width: pull the neighbours in so the next card clearly peeks out
+    const narrow = (stage.current?.clientWidth ?? 1000) < 600;
+    const gap = narrow ? 0.5 : 0.6;
+    const stack = narrow ? 0.08 : 0.13;
+    const maxA = isTouch.current ? 4.5 : 7.5;
     for (let i = 0; i < n; i++) {
       const el = cards.current[i];
       if (!el) continue;
       const d = i - st.pos;
       const a = Math.abs(d);
       const sg = Math.sign(d);
-      if (a > 7.5) { el.style.visibility = "hidden"; continue; }
+      if (a > maxA) { el.style.visibility = "hidden"; continue; }
       el.style.visibility = "";
       const near = Math.min(a, 1);
       // first neighbour steps well clear of the centre card, the rest stack tightly behind it
-      const x = sg * (near * 0.6 + Math.max(0, Math.min(a, 7) - 1) * 0.13) * w * st.spread;
+      const x = sg * (near * gap + Math.max(0, Math.min(a, 7) - 1) * stack) * w * st.spread;
       const rot = -sg * near * 38 * st.spread;
       const z = -(near * 110 + Math.max(0, a - 1) * 55);
       const scale = 1 - near * 0.04;
       el.style.transform = `translate(-50%, -50%) translateX(${x.toFixed(1)}px) translateZ(${z.toFixed(1)}px) rotateY(${rot.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
       el.style.zIndex = String(1000 - Math.round(a * 10));
-      el.style.opacity = String(clamp(6.5 - a, 0, 1));
+      el.style.opacity = String(clamp(maxA - 1 - a, 0, 1));
       el.style.setProperty("--shade", (Math.min(a, 3) * 0.06).toFixed(3));
     }
     const nowActive = clamp(Math.round(st.pos), 0, n - 1);
-    if (nowActive !== activeRef.current) { activeRef.current = nowActive; setActive(nowActive); }
+    if (nowActive !== activeRef.current) {
+      activeRef.current = nowActive;
+      setActive(nowActive);
+      // in the app: a light tick per card while swiping, like a detent. A search glide stays quiet until it lands.
+      const now = performance.now();
+      if (st.pulse < 0 && now - lastBuzz.current > 60) { lastBuzz.current = now; haptic("tap"); }
+    }
   };
 
   const tick = (t: number) => {
@@ -64,6 +80,7 @@ export function RaceDeck({ index, races, focus }: { index: Index; races: RaceSum
     if (st.pulse >= 0 && Math.abs(st.pos - st.pulse) < 0.02 && Number.isInteger(st.target)) {
       setFound(st.pulse);
       st.pulse = -1;
+      haptic("step");
     }
     st.raf = settled ? 0 : requestAnimationFrame(tick);
   };
@@ -95,7 +112,12 @@ export function RaceDeck({ index, races, focus }: { index: Index; races: RaceSum
     const i = races.findIndex((r) => r.id === focus.id);
     if (i < 0) return;
     go(i, true);
-    stage.current?.closest(".race-deck")?.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "center" });
+    // on a phone the on-screen keyboard is still closing after a pick; scroll once the viewport has its full height back
+    const t = setTimeout(
+      () => stage.current?.closest(".race-deck")?.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "center" }),
+      isTouch.current ? 320 : 0,
+    );
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focus?.id, focus?.n]);
 

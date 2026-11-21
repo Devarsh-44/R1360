@@ -454,6 +454,8 @@ input[type="range"] { accent-color: var(--race-red); width: 100%; }
   background: color-mix(in srgb, var(--surface-card) 94%, transparent); backdrop-filter: blur(8px); border-top: 1px solid var(--line-subtle);
 }
 .native .site-header .nav { display: none; }
+/* the on-screen keyboard pushes a fixed bar up with it: get it out of the way while typing */
+.native body:has(input:not([type=checkbox], [type=radio], [type=range]):focus, textarea:focus) .tabbar { display: none; }
 .native body { padding-bottom: calc(64px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))); }
 .tabbar a { display: grid; justify-items: center; gap: 2px; min-height: 48px; padding-top: 4px; text-decoration: none; color: var(--text-muted); font: 500 11px/14px var(--font-ui); -webkit-tap-highlight-color: transparent; }
 .tabbar a[aria-current="page"] { color: var(--race-red); font-weight: 600; }
@@ -564,7 +566,7 @@ input[type="range"] { accent-color: var(--race-red); width: 100%; }
 .race-search__icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
 .race-search .race-search__input { width: 100%; text-align: left; font-family: var(--font-ui); padding-left: 36px; font-size: 16px; }
 .race-search__input::-webkit-search-cancel-button { cursor: pointer; }
-.race-search__list { position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0; margin: 0; padding: 4px; list-style: none; background: var(--surface-card); border: 1px solid var(--line-strong); border-radius: var(--radius-md); box-shadow: var(--shadow-pop); max-height: 340px; overflow-y: auto; transform-origin: top center; animation: search-drop .18s cubic-bezier(.2, .8, .2, 1); }
+.race-search__list { position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0; margin: 0; padding: 4px; list-style: none; background: var(--surface-card); border: 1px solid var(--line-strong); border-radius: var(--radius-md); box-shadow: var(--shadow-pop); max-height: min(340px, 50dvh); overflow-y: auto; transform-origin: top center; animation: search-drop .18s cubic-bezier(.2, .8, .2, 1); }
 @keyframes search-drop { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
 .race-search__opt { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); padding: 8px 10px; border-radius: var(--radius-sm); cursor: pointer; }
 .race-search__opt[aria-selected="true"] { background: var(--surface-sunken); }
@@ -606,5 +608,11 @@ input[type="range"] { accent-color: var(--race-red); width: 100%; }
 .race-deck__now { text-align: center; margin-top: var(--space-2); }
 @media (max-width: 600px) {
   .race-deck__stage { height: 290px; }
+  .race-deck__slot { width: clamp(248px, 72vw, 300px); }
+  .race-deck__slot .race-card { padding: var(--space-4); }
+  .race-deck__slot .race-card .meta > * { white-space: nowrap; }
   .race-deck__arrow { display: none; }
+  /* too small to tap on a phone: the ticks just show where you are, swiping does the moving */
+  .race-deck__ticks { gap: 2px; pointer-events: none; }
+  .race-deck__tick { padding: 0 2px; }
 }
