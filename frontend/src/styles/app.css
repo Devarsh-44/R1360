@@ -557,3 +557,54 @@ input[type="range"] { accent-color: var(--race-red); width: 100%; }
 .switch[aria-checked="true"] { background: var(--tyre-i); }
 .switch[aria-checked="true"] i { transform: translateX(20px); }
 .switch:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* ---------- races: search + cover-flow deck ---------- */
+.races-tools { position: relative; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-5); }
+.race-search { position: relative; flex: 1 1 280px; max-width: 460px; }
+.race-search__icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+.race-search .race-search__input { width: 100%; text-align: left; font-family: var(--font-ui); padding-left: 36px; font-size: 16px; }
+.race-search__input::-webkit-search-cancel-button { cursor: pointer; }
+.race-search__list { position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0; margin: 0; padding: 4px; list-style: none; background: var(--surface-card); border: 1px solid var(--line-strong); border-radius: var(--radius-md); box-shadow: var(--shadow-pop); max-height: 340px; overflow-y: auto; transform-origin: top center; animation: search-drop .18s cubic-bezier(.2, .8, .2, 1); }
+@keyframes search-drop { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+.race-search__opt { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); padding: 8px 10px; border-radius: var(--radius-sm); cursor: pointer; }
+.race-search__opt[aria-selected="true"] { background: var(--surface-sunken); }
+.race-search__name { font: 700 15px/20px var(--font-display); text-transform: uppercase; }
+.race-search__meta { font: 400 12px/16px var(--font-data); color: var(--text-muted); white-space: nowrap; }
+.race-search__empty { padding: 10px; color: var(--text-muted); font-size: 14px; }
+
+.race-grid__cell { min-width: 0; display: flex; }
+.race-grid__cell > .race-card { flex: 1; }
+
+.race-deck { margin-top: var(--space-2); position: relative; z-index: 0; isolation: isolate; }
+.race-deck__stage { position: relative; height: 300px; perspective: 1300px; perspective-origin: 50% 45%; transform-style: preserve-3d; overflow: hidden; touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: grab; outline: none; border-radius: var(--radius-lg); }
+.race-deck__stage:active { cursor: grabbing; }
+.race-deck__stage:focus-visible { box-shadow: inset 0 0 0 2px var(--focus-ring); }
+.race-deck__slot { position: absolute; left: 50%; top: 50%; width: clamp(260px, 74vw, 340px); transform: translate(-50%, -50%); will-change: transform, opacity; backface-visibility: hidden; }
+.race-deck__slot .race-card { position: relative; box-shadow: 0 1px 2px rgba(22, 19, 15, .06); transition: border-color .15s, box-shadow .3s; -webkit-user-drag: none; }
+/* cards further back sit in a little shade, like the reference's depth */
+.race-deck__slot .race-card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--text-primary); opacity: var(--shade, 0); pointer-events: none; transition: opacity .2s; }
+.race-deck__slot:not(.is-active) .race-card { cursor: pointer; }
+.race-deck__slot.is-active .race-card { box-shadow: 0 18px 40px -12px rgba(22, 19, 15, .28), 0 2px 6px rgba(22, 19, 15, .08); border-color: var(--line-strong); }
+
+/* the race a search landed on: a red ring that blooms once */
+.race-card.is-found { animation: race-found 1.5s cubic-bezier(.2, .8, .2, 1); }
+@keyframes race-found {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--race-red) 55%, transparent); border-color: var(--race-red); }
+  60% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--race-red) 0%, transparent); border-color: var(--race-red); }
+}
+
+.race-deck__foot { display: flex; align-items: center; justify-content: center; gap: var(--space-3); margin-top: var(--space-3); }
+.race-deck__ticks { display: flex; align-items: center; gap: 3px; height: 28px; max-width: min(100%, 520px); overflow: hidden; }
+.race-deck__tick { all: unset; cursor: pointer; width: 2px; flex: 0 0 2px; padding: 0 3px; background: var(--line-strong); background-clip: content-box; border-radius: 1px; transition: height .25s cubic-bezier(.2, .8, .2, 1), background-color .2s; }
+.race-deck__tick:hover { background-color: var(--text-primary); }
+.race-deck__tick[aria-current="true"] { background-color: var(--race-red); }
+.race-deck__tick:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.race-deck__arrow { all: unset; cursor: pointer; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line-subtle); color: var(--text-primary); font: 400 20px/1 var(--font-ui); transition: background-color .15s, opacity .15s; }
+.race-deck__arrow:hover { background: var(--surface-sunken); }
+.race-deck__arrow:disabled { opacity: .3; cursor: default; }
+.race-deck__arrow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.race-deck__now { text-align: center; margin-top: var(--space-2); }
+@media (max-width: 600px) {
+  .race-deck__stage { height: 290px; }
+  .race-deck__arrow { display: none; }
+}
