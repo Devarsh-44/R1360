@@ -34,10 +34,16 @@ venv.bak/
 *.swo
 *~
 
-# Environment Variables
-config/config.env
+# Environment Variables (any folder: backend/config/config.env holds the database URL and API keys)
+**/config/config.env
 .env
 .env.local
+
+# App signing keys: the Play Store upload key must never be committed
+*.jks
+*.keystore
+*.p12
+**/android/key.properties
 
 # FastF1 Cache
 fastf1_cache/
