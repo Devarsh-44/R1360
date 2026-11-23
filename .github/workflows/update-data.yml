@@ -8,7 +8,10 @@ name: Update race data
 
 on:
   schedule:
-    - cron: "0 6 * * *" # 06:00 UTC, the morning after a race
+    # Run every 3 hours at minute 25 (avoiding minute-0 runner traffic spikes).
+    # Catches races across all time zones (Europe, Americas, Asia/Australia)
+    # as soon as OpenF1 data settles, without waiting up to 24 hours.
+    - cron: "25 */3 * * *"
   workflow_dispatch: # "Run workflow" button on the Actions tab
 
 permissions:

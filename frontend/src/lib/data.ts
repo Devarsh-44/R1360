@@ -128,11 +128,13 @@ const cache = new Map<string, Promise<unknown>>();
  */
 const NATIVE = Capacitor.isNativePlatform();
 const LIVE = "https://ri360.vercel.app/";
-const LIVE_TIMEOUT_MS = 5000;
+const LIVE_TIMEOUT_MS = 15000;
 
 async function fetchJson(url: string, init?: RequestInit, timeoutMs?: number): Promise<unknown> {
   const ctl = new AbortController();
-  const timer = timeoutMs ? window.setTimeout(() => ctl.abort(), timeoutMs) : 0;
+  const timer = timeoutMs
+    ? window.setTimeout(() => ctl.abort(new Error("Connection timed out. Check network connection.")), timeoutMs)
+    : 0;
   try {
     const r = await fetch(url, { ...init, signal: ctl.signal });
     if (!r.ok) throw new Error(`${r.status}`);
