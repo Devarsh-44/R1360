@@ -54,7 +54,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add backend/data frontend/public/data
           # race files added in this commit = the races the app should announce
-          new=$(git diff --cached --name-only --diff-filter=A -- 'frontend/public/data/races/*.json' | sed -E 's#.*/([0-9]+)\.json#\1#' | tr '\n' ' ')
+          # keep only purely numeric ids, so no file name can reach the shell as anything but a number
+          new=$(git diff --cached --name-only --diff-filter=A -- 'frontend/public/data/races/*.json' | sed -nE 's#^.*/([0-9]+)\.json$#\1#p' | tr '\n' ' ')
           echo "races=$new" >> "$GITHUB_OUTPUT"
           git commit -m "Update race data ($(date -u +%Y-%m-%d))"
           git push
@@ -65,6 +66,7 @@ jobs:
         if: steps.commit.outputs.races != ''
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          NEW_RACES: ${{ steps.commit.outputs.races }} # passed via env, not pasted into the script
         run: |
           pip install google-auth requests
-          python data_pipeline/notify_new_races.py ${{ steps.commit.outputs.races }}
+          python data_pipeline/notify_new_races.py $NEW_RACES

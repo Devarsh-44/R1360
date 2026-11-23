@@ -1,7 +1,7 @@
 # api/routes/ai_analysis.py
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pathlib import Path
 import json
 import joblib
@@ -19,39 +19,49 @@ router = APIRouter()
 MODEL_PATH = Path("models/lap_time_model.pkl")
 FEATURE_PATH = Path("models/lap_model_features.json")
 
+# Request limits: every lap of every strategy runs the lap-time model, and AI questions are sent to
+# OpenAI, so unbounded inputs would let one request pin the CPU or run up the API bill.
+MAX_LAPS = 100
+MAX_STRATEGIES = 6
+MAX_QUESTION = 500
+
 
 class Stint(BaseModel):
-    compound: str
-    laps: int
+    """Represents a single stint in a race strategy."""
+
+    compound: str = Field(max_length=16)
+    laps: int = Field(ge=1, le=MAX_LAPS)
 
 
 class StrategyInput(BaseModel):
-    name: str
-    stints: list[Stint]
+    """Represents a complete race strategy."""
+
+    name: str = Field(max_length=60)
+    stints: list[Stint] = Field(min_length=1, max_length=8)
 
 
 class AgentRequest(BaseModel):
-    year: int
-    round_number: int
-    race_name: str
-    driver_code: str
-    total_laps: int
-    strategies: list[StrategyInput]
-    question: str | None = None  # optional natural-language question
+    year: int = Field(ge=1950, le=2100)
+    round_number: int = Field(ge=1, le=30)
+    race_name: str = Field(max_length=80)
+    driver_code: str = Field(min_length=2, max_length=3)
+    total_laps: int = Field(ge=1, le=MAX_LAPS)
+    strategies: list[StrategyInput] = Field(min_length=1, max_length=MAX_STRATEGIES)
+    question: str | None = Field(default=None, max_length=MAX_QUESTION)  # optional natural-language question
 
 
 class ChatRequest(BaseModel):
     
-    question: str
-    year: int = 2021
-    round_number: int = 1
-    race_name: str = "Bahrain Grand Prix"
-    driver_code: str = "VER"
-    total_laps: int = 57
+    question: str = Field(min_length=1, max_length=MAX_QUESTION)
+    year: int = Field(default=2021, ge=1950, le=2100)
+    round_number: int = Field(default=1, ge=1, le=30)
+    race_name: str = Field(default="Bahrain Grand Prix", max_length=80)
+    driver_code: str = Field(default="VER", min_length=2, max_length=3)
+    total_laps: int = Field(default=57, ge=1, le=MAX_LAPS)
 
 class HistoryQuestion(ChatRequest):
     """For general F1 history / info questions."""
-    question: str
+    question: str = Field(min_length=1, max_length=MAX_QUESTION)
 
 
 
